@@ -23,10 +23,40 @@
 - Vite
 - Tailwind CSS 
 ### Backend
--
+- Node.js
+- TypeScript
+- Express.js
+- ESLint
+- Prettier
 
 ### Databases
 -
+
+## Development
+
+### Backend Scripts
+The backend is set up with Node.js, TypeScript, and Express.js. Available scripts:
+
+- `npm run dev:backend` - Start backend in development mode with auto-reload (using nodemon + tsx)
+- `npm run build:backend` - Build backend TypeScript to JavaScript in `dist-backend/`
+- `npm run start:backend` - Start the built backend server
+- `npm run lint` - Run ESLint on all TypeScript code
+- `npm run lint:fix` - Run ESLint and automatically fix issues
+- `npm run format` - Format all code with Prettier
+- `npm run format:check` - Check if code is formatted correctly
+- `npm test` - Run tests (placeholder - test runner to be configured)
+
+### Environment Configuration
+The backend supports multiple environments through environment variables:
+- `.env.development` - Development environment configuration
+- `.env.test` - Test environment configuration
+- `.env.production` - Production environment configuration
+
+Copy `.env.example` to `.env` and configure as needed.
+
+### Backend API Endpoints
+- `GET /` - API information
+- `GET /health` - Health check endpoint
 
 ## UI візуалізація
 Дизайн додатку у figma:
