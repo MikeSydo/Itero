@@ -24,6 +24,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["client"],
-  "exclude": ["client/electron"]
+  "include": ["src"],
+  "exclude": ["src/electron"]
 }
