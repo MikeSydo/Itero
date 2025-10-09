@@ -1,5 +1,5 @@
 {
-  "appId": "com.n-ziermann.electron-course",
+  "appId": "com.n-ziermann.itero",
   "files": ["dist-electron", "dist-react"],
   "extraResources": ["dist-electron/preload.cjs"],
   "mac": {
