@@ -2,3 +2,5 @@ node_modules/
 dist-server/
 coverage/
 .env*
+
+/src/generated/prisma
