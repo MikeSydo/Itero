@@ -13,7 +13,7 @@
     "format": "npm run format -w client && npm run format -w server",
     "test": "npm run test -w server",
     "test:watch": "npm run test:watch -w server",
-    "dist:win": "npm run build -w client && electron-builder --win --x64",  
+    "dist:win": "npm run build -w client && electron-builder --win --x64",
     "dist:mac": "npm run build -w client && electron-builder --mac --x64",
     "disc:linux": "npm run build -w client && electron-builder --linux --x64"
   },

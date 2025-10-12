@@ -9,9 +9,6 @@ lerna-debug.log*
 
 **/node_modules
 **/dist
-/client/dist-react
-/client/dist-electron
-/server/dist-server
 dist-ssr
 *.local
 

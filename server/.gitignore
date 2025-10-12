@@ -1,6 +1,6 @@
-node_modules/
-dist-server/
-coverage/
+node_modules
+dist-server
+coverage
 .env*
 
-/src/generated/prisma
+/src/generated/prisma/
