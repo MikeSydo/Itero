@@ -7,7 +7,15 @@
     "dev:client": "npm run dev -w client",
     "dev:server": "npm run dev -w server",
     "build": "npm run build -w client && npm run build -w server",
-    "dist:win": "npm run build -w client && electron-builder --win --x64"
+    "start": "npm run start -w server",
+    "lint": "npm run lint -w client && npm run lint -w server",
+    "lint:fix": "npm run lint:fix -w client && npm run lint:fix -w server",
+    "format": "npm run format -w client && npm run format -w server",
+    "test": "npm run test -w server",
+    "test:watch": "npm run test:watch -w server",
+    "dist:win": "npm run build -w client && electron-builder --win --x64",  
+    "dist:mac": "npm run build -w client && electron-builder --mac --x64",
+    "disc:linux": "npm run build -w client && electron-builder --linux --x64"
   },
   "workspaces": [
     "client",
