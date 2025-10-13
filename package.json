@@ -15,7 +15,9 @@
     "test:watch": "npm run test:watch -w server",
     "dist:win": "npm run build -w client && electron-builder --win --x64",
     "dist:mac": "npm run build -w client && electron-builder --mac --x64",
-    "disc:linux": "npm run build -w client && electron-builder --linux --x64"
+    "disc:linux": "npm run build -w client && electron-builder --linux --x64",
+    "db:migrate": "npm exec -w server prisma migrate dev",
+    "db:seed": "npm exec -w server prisma db seed"
   },
   "workspaces": [
     "client",

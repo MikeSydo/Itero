@@ -1,12 +1,22 @@
+/* eslint-disable prettier/prettier */
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function seed() {
+    const tasksList = await prisma.tasksList.create({
+        data: { name: 'To-do' }
+    });
     await prisma.task.createMany({
         data: [
-            { title: 'To-do' }, 
-            { title: 'Done' }
+            {
+                name: 'Task 1',
+                listId: tasksList.id
+            }, 
+            {
+                name: 'Task 2',
+                listId: tasksList.id
+            }
         ]
     });
 }

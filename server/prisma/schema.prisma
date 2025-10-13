@@ -10,5 +10,13 @@ datasource db {
 
 model Task {
   id          Int   @id @default(autoincrement())
-  title       String
+  name        String
+  list   TasksList @relation(fields: [listId], references: [id])
+  listId Int
+}
+
+model TasksList {
+  id    Int    @id @default(autoincrement())
+  name  String
+  tasks Task[]
 }

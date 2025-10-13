@@ -32,4 +32,19 @@ app.get('/tasks/:id', async (req, res) => {
   res.json(task);
 });
 
+app.get('/lists', async (_req, res) => {
+  const lists = await prisma.tasksList.findMany();
+  res.json(lists);
+});
+
+app.get('/lists/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ error: 'Invalid list id' });
+  }
+  const list = await prisma.tasksList.findUnique({ where: { id } });
+  if (!list) return res.status(404).json({ error: 'List not found' });
+  res.json(list);
+});
+
 export default app;
