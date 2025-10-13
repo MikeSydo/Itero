@@ -6,7 +6,7 @@ function App() {
   const { taskIds, loading, error } = useTasks();
 
   return (
-    <>
+    <div className='bg-[var(--color-bg)] min-h-screen flex flex-col'>
       <List
         className="ListTasks"
         style={{ background: 'grey', margin: 20, padding: 20, width: 300 }}
@@ -20,7 +20,7 @@ function App() {
           <div style={{ color: 'white', opacity: 0.8 }}>No tasks</div>
         )}
       </List>
-    </>
+    </div>
   );
 }
 

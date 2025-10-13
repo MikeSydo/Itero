@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useState } from 'react';
 import type { Task } from '../../electron/types';
 
@@ -5,8 +6,8 @@ export function useTasks() {
   const [taskIds, setTaskIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const api = (import.meta as any).env?.VITE_API_URL ?? 'http://localhost:3000';
-
+  const api = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+  
   const reload = useCallback(async () => {
     setLoading(true);
     setError(null);
