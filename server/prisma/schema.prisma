@@ -19,4 +19,12 @@ model TasksList {
   id    Int    @id @default(autoincrement())
   name  String
   tasks Task[]
+  board KanbanBoard @relation(fields: [boardId], references: [id])
+  boardId Int
+}
+
+model KanbanBoard {
+  id    Int    @id @default(autoincrement())
+  name  String
+  lists TasksList[]
 }
