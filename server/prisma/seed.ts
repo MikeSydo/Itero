@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function seed() {
     const tasksList = await prisma.tasksList.create({
-        data: { name: 'To-do' }
+        data: { name: 'Done' }
     });
     await prisma.task.createMany({
         data: [

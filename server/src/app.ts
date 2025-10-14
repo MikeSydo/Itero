@@ -47,4 +47,13 @@ app.get('/lists/:id', async (req, res) => {
   res.json(list);
 });
 
+app.get('/lists/:id/tasks', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ error: 'Invalid list id' });
+  }
+  const tasks = await prisma.task.findMany({ where: { listId: id } });
+  res.json(tasks);
+});
+
 export default app;
