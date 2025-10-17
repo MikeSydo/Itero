@@ -1,10 +1,9 @@
-import TasksList from './components/TasksList';
+import { KanbanBoard } from "./components";
 
 function App() {
   return (
     <div className='bg-[var(--color-bg)] min-h-screen flex flex-col'>
-      <TasksList id={1}></TasksList>
-      <TasksList id={2}></TasksList>
+      <KanbanBoard id={1}></KanbanBoard>
     </div> 
   );
 }

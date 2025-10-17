@@ -1,7 +1,7 @@
 import { Empty, List } from 'antd';
-import TaskCard from './TaskCard';
+import { TaskCard } from './';
 import type { TasksList as TasksListType, Task } from '../../electron/types';
-import { useFetch } from '../hooks/useFetch';
+import { useFetch } from '../hooks';
 
 export default function TasksList({ id }: { id: number }) {
   const { data: list, loading: loadingList, error: errorList } = useFetch<TasksListType>(`/lists/${id}`);

@@ -1,6 +1,6 @@
 import { Card } from 'antd';
 import type { Task } from '../../electron/types';
-import { useFetch } from '../hooks/useFetch';
+import { useFetch } from '../hooks';
 
 export default function TaskCard({ id }: { id: number }) {
   const { data: task, loading, error } = useFetch<Task>(`/tasks/${id}`);
