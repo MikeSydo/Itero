@@ -80,4 +80,30 @@ app.get('/boards/:id/lists', async (req, res) => {
   res.json(lists);
 });
 
+app.post('/tasks', async (req, res) => {
+  try {
+    const task = await prisma.task.create({
+      data: req.body,
+    });
+    res.status(201).json(task);
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to create task' });
+  }
+});
+
+app.delete('/tasks/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ error: 'Invalid task id' });
+    }
+    await prisma.task.delete({
+      where: { id },
+    });
+    res.status(204).send();
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to delete task' });
+  }
+});
+
 export default app;
