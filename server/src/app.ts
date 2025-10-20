@@ -106,4 +106,22 @@ app.delete('/tasks/:id', async (req, res) => {
   }
 });
 
+app.delete('/lists/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ error: 'Invalid list id' });
+    }
+    await prisma.task.deleteMany({
+      where: { listId: id },
+    });
+    await prisma.tasksList.delete({
+      where: { id },
+    });
+    res.status(204).send();
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to delete list' });
+  }
+});
+
 export default app;

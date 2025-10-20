@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Empty, List, Button, Typography, Input, Space } from 'antd';
+import { Empty, List, Button, Typography, Input, Space, Dropdown, Flex } from 'antd';
+import type { MenuProps } from 'antd';
 import { TaskCard } from './';
 import type { TasksList as TasksListType, Task } from '../../electron/types';
 import { useFetch } from '../hooks';
+import { DeleteOutlined } from '@ant-design/icons'
 
 const { Title } = Typography;
 
@@ -13,7 +15,8 @@ export default function TasksList({ id }: { id: number }) {
   const [taskName, setTaskName] = useState('');
   const [creating, setCreating] = useState(false);
   const [taskList, setTaskList] = useState<Task[]>([]);
-  
+  const [isDeleted, setIsDeleted] = useState(false);
+
   const loading = loadingList || loadingTasks;
   const error = errorList || errorTasks;
 
@@ -66,14 +69,54 @@ export default function TasksList({ id }: { id: number }) {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      const api = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+      const response = await fetch(`${api}/lists/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete task');
+      
+      setIsDeleted(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (isDeleted) {
+    return null;
+  }
+
+  const menuItems: MenuProps['items'] = [
+    {
+      key: 'delete',
+      label: 'Delete',
+      icon: <DeleteOutlined/>,
+      danger: true,
+      onClick: handleDelete,
+    },
+  ];
+
   return (
     <div className='bg-[#3d3d3d] m-5 mr-1 '>
-      <Title level={3} style={{ color: 'white', margin: 20}}>
-        {loading ? 'Loading…' : list ? list.name : error ?? 'Error'}
-        <span className='p-5 text-sm font-normal text-gray-400'>
-          {loading ? 'Loading…' : list ? ('ID: ' + list.id) : error ?? 'Error'}
-        </span>
-      </Title>
+      <Flex gap= {100}>
+        <Title level={3} style={{ color: 'white', margin: 20}}>
+          {loading ? 'Loading…' : list ? list.name : error ?? 'Error'}
+          <span className='p-5 text-sm font-normal text-gray-400'>
+            {loading ? 'Loading…' : list ? ('ID: ' + list.id) : error ?? 'Error'}
+          </span>
+        </Title>
+        <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
+          <Button 
+            style={{ marginTop: 20, color: 'white', background:'#3d3d3d', borderColor:'#3d3d3d', fontSize: 30, paddingBottom: 15}}
+            onMouseEnter={(e) => {e.currentTarget.style.background = '#8c7d0d'}}
+            onMouseLeave={(e) => {e.currentTarget.style.background = '#3d3d3d'}}
+          >
+            ...
+          </Button>
+        </Dropdown>
+      </Flex>
       <List
         style={{ margin:20, marginBottom: 5, width: 300 }}
         dataSource={taskList}
