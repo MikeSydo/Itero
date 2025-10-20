@@ -4,7 +4,6 @@ import { useFetch } from '../hooks';
 
 export default function TaskCard({ id }: { id: number }) {
   const { data: task, loading, error } = useFetch<Task>(`/tasks/${id}`);
-
   return (
     <Card
       title={<span className="text-white">{loading ? 'Loading…' : task ? task.name : error ?? 'Error'}</span>}

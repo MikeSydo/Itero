@@ -8,7 +8,7 @@ export type TasksList = {
   name: string;
 };
 
-export type kanbanBoard = {
+export type KanbanBoard = {
   id: number;
   name: string;
 }

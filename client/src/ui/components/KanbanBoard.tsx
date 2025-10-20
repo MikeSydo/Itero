@@ -1,4 +1,4 @@
-import type { kanbanBoard as KanbanBoardType, TasksList as TasksListType } from "../../electron/types";
+import type { KanbanBoard as KanbanBoardType, TasksList as TasksListType } from "../../electron/types";
 import { useFetch } from "../hooks";
 import { TasksList } from "./";
 import { Flex } from 'antd'
