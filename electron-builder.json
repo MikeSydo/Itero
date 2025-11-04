@@ -1,0 +1,34 @@
+{
+  "appId": "com.mikesydo.itero",
+  "productName": "Itero",
+  "files": ["dist-electron", "dist"],
+  "extraResources": ["dist-electron/preload.cjs"],
+  "directories": {
+    "buildResources": "build"
+  },
+  "mac": {
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["arm64", "x64"]
+      }
+    ],
+    "category": "public.app-category.productivity"
+  },
+  "linux": {
+    "target": ["AppImage", "deb"],
+    "category": "Utility"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ]
+  }
+}
