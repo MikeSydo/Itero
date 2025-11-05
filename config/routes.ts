@@ -12,24 +12,19 @@
  */
 export default [
   {
-    path: '/welcome',
-    name: 'welcome',
-    //icon: 'smile',
-    component: './Welcome',
-  },
-  {
-    path: '/board/:id',
-    name: 'board',
-    //icon: 'appstore',
-    component: './boards/[id]',
-  },
-  {
-    path: '/boards/:id',
-    redirect: '/board/:id',
-  },
-  {
     path: '/',
-    redirect: '/welcome',
+    name: 'Home',
+    component: './Home',
+  },
+  {
+    path: '/boards',
+    name: 'boards',
+    component: './Boards',
+  },
+  {
+    path: '/boards/:boardId',
+    component: './Board',
+    layout: false,
   },
   {
     path: '/*',

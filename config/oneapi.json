@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "Itero API",
-    "description": "Itero - Kanban Board Management System API",
+    "title": "Itero",
+    "description": "Itero - Kanban Board Management",
     "version": "1.0.0"
   },
   "servers": [
