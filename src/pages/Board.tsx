@@ -15,6 +15,3 @@ export default function Board() {
     </div>
   );
 }
-
-// here we parse id of board by using useMatch
-//to fetch data use useEffect

@@ -10,9 +10,10 @@
     "build": "npm-run-all --parallel build:client build:api build:electron",
     "build:api": "tsc --project api/tsconfig.json",
     "build:client": "max build",
-    "build:electron": "npm run electron:transpile && electron-builder",
-
-    "dev": "npm-run-all --parallel  dev:api dev:client dev:electron",
+    "build:electron": "npm run transpile:electron && electron-builder",
+    
+    "dev": "npm-run-all --parallel dev:api dev:client dev:electron",
+    "dev:web": "npm-run-all --parallel  dev:api dev:client",
     "dev:api": "cross-env NODE_ENV=development nodemon --watch api --ext ts --exec tsx api/server.ts",
     "dev:client": "cross-env UMI_ENV=dev max dev",
     "dev:electron": "npm run transpile:electron && cross-env NODE_ENV=development electron .",

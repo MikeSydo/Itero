@@ -96,6 +96,18 @@ app.post('/tasks', async (req, res) => {
   }
 });
 
+app.post('/lists', async (req, res) => {
+  try {
+    const list = await prisma.tasksList.create({
+      data: req.body,
+    });
+    res.status(201).json(list);
+  } catch (error) {
+    console.error('Error creating list:', error);
+    res.status(400).json({ error: 'Failed to create list' });
+  }
+});
+
 app.delete('/tasks/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
