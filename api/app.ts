@@ -6,9 +6,14 @@ const app = express();
 const prisma = new PrismaClient();
 app.use(express.json());
 
+const CLIENT_PORT = process.env.CLIENT_PORT || '5123';
+
 app.use(
   cors({
-    origin: true, //['http://localhost:5123', 'http://127.0.0.1:5123'],
+    origin: [
+      `http://localhost:${CLIENT_PORT}`,
+      `http://127.0.0.1:${CLIENT_PORT}`,
+    ],
     credentials: true,
   }),
 );
