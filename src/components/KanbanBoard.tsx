@@ -2,7 +2,10 @@ import type { kanbanBoard as KanbanBoardType, TasksList as TasksListType } from 
 import { useFetch, useEditableName } from "../hooks";
 import { TasksList } from "./";
 import { Flex, Button, Input, Space } from 'antd'
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
+import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, horizontalListSortingStrategy, SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { list } from "postcss";
 
 export default function KanbanBoard({ id }: { id: number }) {
     const { data:board, loading:loadingBoard, error:errorBoard } = useFetch<KanbanBoardType>(`/boards/${id}`);
@@ -11,7 +14,6 @@ export default function KanbanBoard({ id }: { id: number }) {
     const [listName, setListName] = useState('');
     const [creating, setCreating] = useState(false);
     const [displayLists, setDisplayLists] = useState<TasksListType[]>([]);
-
     const loading = loadingBoard || loadingLists;
     const error = errorBoard || errorLists;
     const api =  `http://localhost:${process.env.PORT || 3000}`;
@@ -78,6 +80,26 @@ export default function KanbanBoard({ id }: { id: number }) {
     }
   };
 
+  const getListPos = (id: number) => {
+    return displayLists.findIndex(list => list.id === id);
+  }
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (active.id === over.id) return;
+    setDisplayLists((items) => {
+      const originalPos = getListPos(active.id);
+      const newPos = getListPos(over.id);
+      return arrayMove(items, originalPos, newPos);
+    });
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
   return (
     <div style={{ background: '#293244', minHeight: '100vh' }}>
       <Flex   
@@ -110,7 +132,11 @@ export default function KanbanBoard({ id }: { id: number }) {
       <Flex style={{ overflowX: 'auto', padding: 20, paddingTop: 40, height: '100%' }} gap={20} align="start">
           {error && <div style={{ color: 'salmon' }}>{error}</div>}
           {loading && <div style={{ color: 'Black' }}>Loading…</div>}
-          {!loading && !error && displayLists && displayLists.map(list => (<TasksList key={list.id} id={list.id} />))}
+          <DndContext sensors={sensors} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+            <SortableContext items={displayLists} strategy={horizontalListSortingStrategy}>
+              {!loading && !error && displayLists && displayLists.map(list => (<TasksList key={list.id} id={list.id} />))}
+            </SortableContext>
+          </DndContext>
           {isCreating ? (
                   <div style={{ marginLeft: 20, marginBottom: 5, width: 300 }}>
                   <Input

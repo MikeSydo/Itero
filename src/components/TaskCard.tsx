@@ -4,10 +4,13 @@ import type { MenuProps } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import type { Task } from 'types/index';
 import { useFetch } from '../hooks';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 export default function TaskCard({ id }: { id: number}) {
   const { data: task, loading, error } = useFetch<Task>(`/tasks/${id}`);
   const [isDeleted, setIsDeleted] = useState(false);
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
 
   const handleDelete = async () => {
     try {
@@ -38,11 +41,22 @@ export default function TaskCard({ id }: { id: number}) {
     },
   ];
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    background: 'black',
+    marginBottom: 10,
+    cursor: 'grab',
+  };
+
   return (
     <Card
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       title={<span style={{color:'white'}}>{loading ? 'Loading…' : task ? task.name : error ?? 'Error'}</span>}
       variant='borderless'
-      style={{ background: 'black', marginBottom: 10 }}
+      style={style}
       styles={{header:{borderBottom: 0, background: 'black'}, body:{background:'black', color:'white', marginTop:-30}}}
     >
       <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Empty, List, Button, Typography, Input, Space, Dropdown, Flex } from 'antd';
+import { List, Button, Input, Space, Dropdown, Flex } from 'antd';
 import type { MenuProps } from 'antd';
 import { TaskCard } from './';
 import type { TasksList as TasksListType, Task } from 'types/index';
 import { useFetch, useEditableName } from '../hooks';
 import { DeleteOutlined } from '@ant-design/icons'
-
-const { Title } = Typography;
+import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext,  useSortable,  verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 export default function TasksList({ id }: { id: number }) {
   const { data: list, loading: loadingList, error: errorList } = useFetch<TasksListType>(`/lists/${id}`);
@@ -14,8 +15,12 @@ export default function TasksList({ id }: { id: number }) {
   const [isCreating, setIsCreating] = useState(false);
   const [taskName, setTaskName] = useState('');
   const [creating, setCreating] = useState(false);
-  const [taskList, setTaskList] = useState<Task[]>([]);
+  const [tasksList, setTaskList] = useState<Task[]>([]);
   const [isDeleted, setIsDeleted] = useState(false);
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+
+  const loading = loadingList || loadingTasks;
+  const error = errorList || errorTasks;
 
   const api =  `http://localhost:${process.env.PORT || 3000}`;
 
@@ -37,7 +42,28 @@ export default function TasksList({ id }: { id: number }) {
     if (tasks) {
       setTaskList(tasks);
     }
-  }, [tasks]);  
+  }, [tasks]);
+
+  const getTaskPos = (id: number) => {
+    return tasksList.findIndex(task => task.id === id);
+  }
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    
+    setTaskList((items) => {
+      const originalPos = getTaskPos(active.id);
+      const newPos = getTaskPos(over.id);
+      return arrayMove(items, originalPos, newPos);
+    });
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const handleCreateTask = async () => {
     if (!taskName.trim()) {
@@ -60,7 +86,7 @@ export default function TasksList({ id }: { id: number }) {
       if (!response.ok) throw new Error('Failed to create task');
       
       const newTask = await response.json();
-      setTaskList([...taskList, newTask]);
+      setTaskList([...tasksList, newTask]);
       setTaskName('');
       setIsCreating(false);
     } catch (err) {
@@ -109,11 +135,18 @@ export default function TasksList({ id }: { id: number }) {
     },
   ];
 
-
+  const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      background: '#3d3d3d',
+    };
 
   return (
-    <div style={{background: '#3d3d3d'}}>
-      <Flex gap= {160 }>
+    <div 
+      ref={setNodeRef}
+      style={style}
+    >
+      <Flex gap= {160 } {...attributes} {...listeners} style={{ cursor: 'grab', paddingBottom: 5 }}>
         {listNameEditor.isEditing ? (
           <Input
             value={listNameEditor.name}
@@ -122,20 +155,22 @@ export default function TasksList({ id }: { id: number }) {
             onBlur={listNameEditor.cancelEdit}
             autoFocus
             style={{ margin: 10, minWidth: 50, width:70 }}
+            onPointerDown={(e) => e.stopPropagation()}
           />
         ) : (
-          <Button  
-            style={{ fontSize: 25, margin: 10, marginTop: 15, background: 'transparent', border: 'none', color: 'white', minWidth: 50}}
-            onClick={listNameEditor.startEditing}
+          <div  
+            style={{ fontSize: 25, margin: 10, marginTop: 15, color: 'white', minWidth: 50, userSelect: 'none'}}
+            onDoubleClick={listNameEditor.startEditing}
           >
             {listNameEditor.name}
-          </Button>
+          </div>
         )}
         <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
           <Button 
             style={{ marginTop: 15, color: 'white', background:'#3d3d3d', borderColor:'#3d3d3d', fontSize: 30, paddingBottom: 15}}
             onMouseEnter={(e) => {e.currentTarget.style.background = '#8c7d0d'}}
             onMouseLeave={(e) => {e.currentTarget.style.background = '#3d3d3d'}}
+            onPointerDown={(e) => e.stopPropagation()}
           >
             ...
           </Button>
@@ -143,10 +178,13 @@ export default function TasksList({ id }: { id: number }) {
       </Flex>
       <List
         style={{ margin:20, marginBottom: 5, width: 300 }}
-        dataSource={taskList}
-        renderItem={item => (<TaskCard key={item.id} id={item.id} />)}
-        locale={{ emptyText: <div /> }}
-      />
+      >
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+          <SortableContext items={tasksList} strategy={verticalListSortingStrategy}>
+            {!loading && !error && tasksList && tasksList.map(card => (<TaskCard key={card.id} id={card.id} />))}
+          </SortableContext>
+        </DndContext>
+      </List>
       
       {isCreating ? (
         <div style={{ marginLeft: 20, marginBottom: 5, width: 300 }}>
