@@ -16,6 +16,9 @@ export default function TasksList({ id }: { id: number }) {
   const [creating, setCreating] = useState(false);
   const [taskList, setTaskList] = useState<Task[]>([]);
   const [isDeleted, setIsDeleted] = useState(false);
+  const [isEditingListName, setIsEditingListName] = useState(false);
+  const [currentListName, setCurrentListName] = useState('');
+  const [savedListName, setSavedListName] = useState('');
 
   const loading = loadingList || loadingTasks;
   const error = errorList || errorTasks;
@@ -26,6 +29,13 @@ export default function TasksList({ id }: { id: number }) {
       setTaskList(tasks);
     }
   }, [tasks]);
+
+  useEffect(() => {
+    if (list) {
+      setCurrentListName(list.name);
+      setSavedListName(list.name);
+    }
+  }, [list]);  
 
   const handleCreateTask = async () => {
     if (!taskName.trim()) {
@@ -97,15 +107,67 @@ export default function TasksList({ id }: { id: number }) {
     },
   ];
 
+  const handleListNameKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleUpdateListName();
+    } else if (e.key === 'Escape') {
+      handleCancelListNameEdit();
+    }
+  };
+
+  const handleUpdateListName = async () => {
+    if (!currentListName.trim() || !list) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${api}/lists/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },  
+        body: JSON.stringify({
+          name: currentListName,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update board name');
+
+      setSavedListName(currentListName);
+      setIsEditingListName(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCancelListNameEdit = () => {
+    setCurrentListName(savedListName);
+    setIsEditingListName(false);
+  };
+
   return (
     <div style={{background: '#3d3d3d'}}>
       <Flex gap= {160 }>
-        <Title level={3} style={{ color: 'white', margin: 20}}>
-          {loading ? 'Loading…' : list ? list.name : error ?? 'Error'}
-        </Title>
+        {isEditingListName ? (
+          <Input
+            value={currentListName}
+            onChange={(e) => setCurrentListName(e.target.value)}
+            onKeyDown={handleListNameKeyPress}
+            onBlur={handleCancelListNameEdit}
+            autoFocus
+            style={{ margin: 10, minWidth: 50, width:70 }}
+          />
+        ) : (
+          <Button  
+            style={{ fontSize: 25, margin: 10, marginTop: 15, background: 'transparent', border: 'none', color: 'white', minWidth: 50}}
+            onClick={() => setIsEditingListName(true)}
+          >
+            {currentListName}
+          </Button>
+        )}
         <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
           <Button 
-            style={{ marginTop: 20, color: 'white', background:'#3d3d3d', borderColor:'#3d3d3d', fontSize: 30, paddingBottom: 15}}
+            style={{ marginTop: 15, color: 'white', background:'#3d3d3d', borderColor:'#3d3d3d', fontSize: 30, paddingBottom: 15}}
             onMouseEnter={(e) => {e.currentTarget.style.background = '#8c7d0d'}}
             onMouseLeave={(e) => {e.currentTarget.style.background = '#3d3d3d'}}
           >
