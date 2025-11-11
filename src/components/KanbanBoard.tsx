@@ -2,10 +2,9 @@ import type { kanbanBoard as KanbanBoardType, TasksList as TasksListType } from 
 import { useFetch, useEditableName } from "../hooks";
 import { TasksList } from "./";
 import { Flex, Button, Input, Space } from 'antd'
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, horizontalListSortingStrategy, SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { list } from "postcss";
 
 export default function KanbanBoard({ id }: { id: number }) {
     const { data:board, loading:loadingBoard, error:errorBoard } = useFetch<KanbanBoardType>(`/boards/${id}`);
@@ -117,7 +116,7 @@ export default function KanbanBoard({ id }: { id: number }) {
             style={{ margin: 0, minWidth: 50, width:70 }}
           />
         ) : (
-          <Button  
+          <Button  //FIXME: setup behavior for very long board names 
             style={{ fontSize: 30, margin: 0, background: 'transparent', border: 'none', color: 'white', minWidth: 50}}
             onClick={boardNameEditor.startEditing}
           >

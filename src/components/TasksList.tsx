@@ -131,7 +131,7 @@ export default function TasksList({ id }: { id: number }) {
       label: 'Delete',
       icon: <DeleteOutlined/>,
       danger: true,
-      onClick: handleDelete,
+      onClick: handleDelete, //FIXME: list not deleting when button in dropdown clicked
     },
   ];
 
@@ -146,8 +146,8 @@ export default function TasksList({ id }: { id: number }) {
       ref={setNodeRef}
       style={style}
     >
-      <Flex gap= {160 } {...attributes} {...listeners} style={{ cursor: 'grab', paddingBottom: 5 }}>
-        {listNameEditor.isEditing ? (
+      <Flex gap= {160 } {...attributes} {...listeners} style={{ cursor: 'grab', paddingBottom: 5, maxWidth: 160 }}>
+        {listNameEditor.isEditing ? ( //FIXME: setup behavior for very long list names
           <Input
             value={listNameEditor.name}
             onChange={(e) => listNameEditor.setName(e.target.value)}
@@ -159,8 +159,9 @@ export default function TasksList({ id }: { id: number }) {
           />
         ) : (
           <div  
-            style={{ fontSize: 25, margin: 10, marginTop: 15, color: 'white', minWidth: 50, userSelect: 'none'}}
-            onDoubleClick={listNameEditor.startEditing}
+            style={{ fontSize: 25, margin: 20, marginTop: 15, color: 'white', minWidth: 70, userSelect: 'none'}}
+            onClick={listNameEditor.startEditing}
+            onPointerDown={(e) => e.stopPropagation()}
           >
             {listNameEditor.name}
           </div>
@@ -179,7 +180,8 @@ export default function TasksList({ id }: { id: number }) {
       <List
         style={{ margin:20, marginBottom: 5, width: 300 }}
       >
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd} collisionDetection={closestCenter} ////FIXME: setup behavior dnd for cards
+        >
           <SortableContext items={tasksList} strategy={verticalListSortingStrategy}>
             {!loading && !error && tasksList && tasksList.map(card => (<TaskCard key={card.id} id={card.id} />))}
           </SortableContext>
