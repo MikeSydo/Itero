@@ -131,7 +131,8 @@ export default function KanbanBoard({ id }: { id: number }) {
       <Flex style={{ overflowX: 'auto', padding: 20, paddingTop: 40, height: '100%' }} gap={20} align="start">
           {error && <div style={{ color: 'salmon' }}>{error}</div>}
           {loading && <div style={{ color: 'Black' }}>Loading…</div>}
-          <DndContext sensors={sensors} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+          <DndContext sensors={sensors} onDragEnd={handleDragEnd} collisionDetection={closestCenter} //FIXME: setup behavior dnd for lists
+          >
             <SortableContext items={displayLists} strategy={horizontalListSortingStrategy}>
               {!loading && !error && displayLists && displayLists.map(list => (<TasksList key={list.id} id={list.id} />))}
             </SortableContext>
