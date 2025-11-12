@@ -53,7 +53,7 @@ export default function TaskCard({ id }: { id: number}) {
       label: 'Delete',
       icon: <DeleteOutlined/>,
       danger: true,
-      onClick: handleDelete, //FIXME: card not deleting when button in dropdown clicked
+      onClick: handleDelete,
     },
   ];
 

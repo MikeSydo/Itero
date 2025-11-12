@@ -60,7 +60,11 @@ export default function TasksList({ id }: { id: number }) {
   }
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(TouchSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
@@ -133,6 +137,7 @@ export default function TasksList({ id }: { id: number }) {
       danger: true,
       onClick: handleDelete, //FIXME: list not deleting when button in dropdown clicked
     },
+    
   ];
 
   const style = {
@@ -172,6 +177,7 @@ export default function TasksList({ id }: { id: number }) {
             onMouseEnter={(e) => {e.currentTarget.style.background = '#8c7d0d'}}
             onMouseLeave={(e) => {e.currentTarget.style.background = '#3d3d3d'}}
             onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}  
           >
             ...
           </Button>
