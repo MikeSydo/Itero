@@ -50,4 +50,16 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
+router.post('/', async (req, res) => {
+  try {
+    const board = await prisma.kanbanBoard.create({
+      data: req.body,
+    });
+    res.status(201).json(board);
+  } catch (error) {
+    console.error('Error creating board:', error);
+    res.status(400).json({ error: 'Failed to create board' });
+  }
+});
+
 export default router;
