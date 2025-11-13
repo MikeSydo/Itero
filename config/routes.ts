@@ -18,13 +18,18 @@ export default [
   },
   {
     path: '/boards',
-    name: 'boards',
+    name: 'Boards',
     component: './Boards',
   },
   {
     path: '/boards/:boardId',
     component: './Board',
     layout: false,
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: './Settings',
   },
   {
     path: '/*',

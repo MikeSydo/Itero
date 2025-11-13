@@ -5,7 +5,7 @@ import { Flex, Button, Input, Space } from 'antd'
 import { useState, useEffect } from "react";
 import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, horizontalListSortingStrategy, SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { useNavigate } from "@umijs/max";
+import { useModel, useNavigate } from "@umijs/max";
 import { ProLayout } from '@ant-design/pro-layout';
 
 export default function KanbanBoard({ id }: { id: number }) {
@@ -15,10 +15,12 @@ export default function KanbanBoard({ id }: { id: number }) {
   const [listName, setListName] = useState('');
   const [creating, setCreating] = useState(false);
   const [displayLists, setDisplayLists] = useState<TasksListType[]>([]);
+  const { initialState } = useModel('@@initialState');
 
   const loading = loadingBoard || loadingLists;
   const error = errorBoard || errorLists;
   const api =  `http://localhost:${process.env.PORT || 3000}`;
+  const isDarkTheme = initialState?.settings?.navTheme === 'realDark';
   const navigate = useNavigate();
 
   const boardNameEditor = useEditableName({
@@ -110,9 +112,9 @@ export default function KanbanBoard({ id }: { id: number }) {
   return (
     <>
       <ProLayout
-        title="Ant Design Pro"
+        title = "itero"
         layout="top"
-        navTheme="realDark"
+        navTheme={isDarkTheme ? 'realDark' : 'light'}
         fixedHeader
         menuRender={false}
         footerRender={false}
@@ -140,8 +142,7 @@ export default function KanbanBoard({ id }: { id: number }) {
               </Button>
             )}
             <Space>
-              <Button>+ Поділитися(Not worked)</Button> 
-              <Button>...(Not worked)</Button>
+              <Button>...</Button>
             </Space>
           </Flex>
           <Flex style={{ overflowX: 'auto', padding: 20, paddingTop: 40, height: '100%' }} gap={20} align="start">

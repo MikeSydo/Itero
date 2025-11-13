@@ -19,23 +19,11 @@ export const layout = ({ initialState, setInitialState }: any) => {
     menu: {
       locale: false,
     },
+    rightContentRender: () => null,
     childrenRender: (children: any) => {
       return (
         <>
           {children}
-          {isDevOrTest && (
-            <SettingDrawer 
-              disableUrlParams
-              enableDarkTheme
-              settings={initialState?.settings}
-              onSettingChange={(settings: any) => {
-                setInitialState((preInitialState: any) => ({
-                  ...preInitialState,
-                  settings,
-                }));
-              }}
-            />
-          )}
         </>
       );
     },
