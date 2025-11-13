@@ -1,10 +1,10 @@
-import type { kanbanBoard as KanbanBoardType, TasksList as TasksListType } from "types/index";
+import type { kanbanBoard as KanbanBoardType, TasksList as TasksListType, Task } from "types/index";
 import { useFetch, useEditableName } from "../hooks";
 import { TasksList } from "./";
 import { Flex, Button, Input, Space } from 'antd'
 import { useState, useEffect } from "react";
-import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
-import { arrayMove, horizontalListSortingStrategy, SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors, DragEndEvent, DragOverEvent, closestCorners, pointerWithin, rectIntersection } from '@dnd-kit/core';
+import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { useNavigate } from "@umijs/max";
 import { ProLayout } from '@ant-design/pro-layout';
 
@@ -15,6 +15,7 @@ export default function KanbanBoard({ id }: { id: number }) {
   const [listName, setListName] = useState('');
   const [creating, setCreating] = useState(false);
   const [displayLists, setDisplayLists] = useState<TasksListType[]>([]);
+  const [allTasks, setAllTasks] = useState<Record<number, Task[]>>({});
 
   const loading = loadingBoard || loadingLists;
   const error = errorBoard || errorLists;
@@ -79,22 +80,125 @@ export default function KanbanBoard({ id }: { id: number }) {
 
   const handleCreateListKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
       handleCreateList();
+    } else if (e.key === 'Escape') {  
+      handleCancel();
     }
   };
 
-  const getListPos = (id: number) => {
-    return displayLists.findIndex(list => list.id === id);
+  const findTaskList = (taskId: number): number | null => {
+    for (const [listId, tasks] of Object.entries(allTasks)) {
+      if (tasks.some(task => task.id === taskId)) {
+        return parseInt(listId);
+      }
+    }
+    return null;
   }
 
-  const handleDragEnd = (event: any) => {
+  const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-    if (active.id === over.id) return;
-    setDisplayLists((items) => {
-      const originalPos = getListPos(active.id);
-      const newPos = getListPos(over.id);
-      return arrayMove(items, originalPos, newPos);
+    if (!over) return;
+
+    const activeId = active.id as number;
+    const overId = over.id as number;
+
+    // Check if dragging a list - don't handle in dragOver
+    const activeListIndex = displayLists.findIndex(list => list.id === activeId);
+    if (activeListIndex !== -1) return;
+
+    // Find which lists the active and over items belong to
+    const activeListId = findTaskList(activeId);
+    let overListId = findTaskList(overId);
+
+    // If over is a list (droppable), use that list
+    if (displayLists.some(list => list.id === overId)) {
+      overListId = overId;
+    }
+
+    if (!activeListId || !overListId) return;
+
+    // Moving to different list or reordering within same list
+    setAllTasks(prev => {
+      const sourceTasks = prev[activeListId] || [];
+      const destTasks = prev[overListId] || [];
+      
+      const taskIndex = sourceTasks.findIndex(t => t.id === activeId);
+      const task = sourceTasks[taskIndex];
+      
+      if (!task) return prev;
+
+      // If same list, use arrayMove for smooth reordering
+      if (activeListId === overListId) {
+        const overIndex = sourceTasks.findIndex(t => t.id === overId);
+        if (taskIndex === overIndex) return prev;
+        
+        return {
+          ...prev,
+          [activeListId]: arrayMove(sourceTasks, taskIndex, overIndex)
+        };
+      }
+
+      // Different lists
+      const newSourceTasks = sourceTasks.filter(t => t.id !== activeId);
+      
+      // Find position in destination list
+      let newDestTasks;
+      if (displayLists.some(list => list.id === overId)) {
+        // Dropped on list itself - add to end
+        newDestTasks = [...destTasks, task];
+      } else {
+        // Dropped on a task - insert at that position
+        const overIndex = destTasks.findIndex(t => t.id === overId);
+        newDestTasks = [...destTasks];
+        newDestTasks.splice(overIndex, 0, task);
+      }
+
+      return {
+        ...prev,
+        [activeListId]: newSourceTasks,
+        [overListId]: newDestTasks
+      };
     });
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeId = active.id as number;
+    const overId = over.id as number;
+
+    // Check if dragging a list
+    const activeListIndex = displayLists.findIndex(list => list.id === activeId);
+    const overListIndex = displayLists.findIndex(list => list.id === overId);
+
+    if (activeListIndex !== -1 && overListIndex !== -1) {
+      // Dragging lists
+      setDisplayLists((items) => arrayMove(items, activeListIndex, overListIndex));
+      return;
+    }
+
+    // Dragging a task - update server if moved to different list
+    const activeListId = findTaskList(activeId);
+    let overListId = findTaskList(overId);
+
+    // If over is a list (droppable), use that list
+    if (displayLists.some(list => list.id === overId)) {
+      overListId = overId;
+    }
+
+    if (!activeListId) return;
+
+    if (activeListId !== overListId && overListId) {
+      // Moved to different list - update on server
+      fetch(`${api}/tasks/${activeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listId: overListId }),
+      }).catch(err => console.error('Failed to update task list:', err));
+    }
   }
 
   const sensors = useSensors(
@@ -104,7 +208,6 @@ export default function KanbanBoard({ id }: { id: number }) {
       },
     }),
     useSensor(TouchSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   return (
@@ -132,7 +235,7 @@ export default function KanbanBoard({ id }: { id: number }) {
                 style={{ margin: 0, minWidth: 50, width:70 }}
               />
             ) : (
-              <Button  //FIXME: setup behavior for very long board names 
+              <Button
                 style={{ fontSize: 30, margin: 0, background: 'transparent', border: 'none', color: 'white', minWidth: 50}}
                 onClick={boardNameEditor.startEditing}
               >
@@ -147,9 +250,21 @@ export default function KanbanBoard({ id }: { id: number }) {
           <Flex style={{ overflowX: 'auto', padding: 20, paddingTop: 40, height: '100%' }} gap={20} align="start">
             {error && <div style={{ color: 'salmon' }}>{error}</div>}
             {loading && <div style={{ color: 'Black' }}>Loading…</div>}
-            <DndContext sensors={sensors} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+            <DndContext 
+              sensors={sensors} 
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              collisionDetection={closestCorners}
+            >
               <SortableContext items={displayLists} strategy={horizontalListSortingStrategy}>
-                {!loading && !error && displayLists && displayLists.map(list => (<TasksList key={list.id} id={list.id} />))}
+                {!loading && !error && displayLists && displayLists.map(list => (
+                  <TasksList 
+                    key={list.id} 
+                    id={list.id} 
+                    tasks={allTasks[list.id] || []}
+                    setTasks={(tasks) => setAllTasks(prev => ({ ...prev, [list.id]: tasks }))}
+                  />
+                ))}
               </SortableContext>
             </DndContext>
             {isCreating ? (
@@ -158,7 +273,7 @@ export default function KanbanBoard({ id }: { id: number }) {
                         placeholder="Enter list name..."
                         value={listName}
                         onChange={(e) => setListName(e.target.value)}
-                        onKeyUp={handleCreateListKeyPress}
+                        onKeyDown={handleCreateListKeyPress}
                         autoFocus
                         style={{ marginBottom: 10 }}
                     />

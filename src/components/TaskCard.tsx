@@ -7,10 +7,15 @@ import { useFetch, useEditableName } from '../hooks';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-export default function TaskCard({ id }: { id: number}) {
+interface TaskCardProps {
+  id: number;
+  onDelete: () => void;
+}
+
+export default function TaskCard({ id, onDelete }: TaskCardProps) {
   const { data: task, loading, error } = useFetch<Task>(`/tasks/${id}`);
   const [isDeleted, setIsDeleted] = useState(false);
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const api = `http://localhost:${process.env.PORT || 3000}`;
 
@@ -38,6 +43,7 @@ export default function TaskCard({ id }: { id: number}) {
       if (!response.ok) throw new Error('Failed to delete task');
       
       setIsDeleted(true);
+      onDelete();
     } catch (err) {
       console.error(err);
     }
@@ -63,6 +69,7 @@ export default function TaskCard({ id }: { id: number}) {
     background: 'black',
     marginBottom: 10,
     cursor: 'grab',
+    opacity: isDragging ? 0.5 : 1,
   };
 
   return (
@@ -70,7 +77,7 @@ export default function TaskCard({ id }: { id: number}) {
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      title={<span style={{color:'white'}}>{loading ? 'Loading…' : task ? task.name : error ?? 'Error'}</span>} ////FIXME: setup behavior for very long card names 
+      title={<span style={{color:'white'}}>{loading ? 'Loading…' : task ? task.name : error ?? 'Error'}</span>}
       variant='borderless'
       style={style}
       styles={{header:{borderBottom: 0, background: 'black'}, body:{background:'black', color:'white', marginTop:-30}}}
@@ -81,6 +88,7 @@ export default function TaskCard({ id }: { id: number}) {
           onMouseEnter={(e) => {e.currentTarget.style.background = '#8c7d0d'}}
           onMouseLeave={(e) => {e.currentTarget.style.background = 'black'}}
           onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           ...
         </Button>

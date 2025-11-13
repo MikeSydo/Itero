@@ -5,19 +5,26 @@ import { TaskCard } from './';
 import type { TasksList as TasksListType, Task } from 'types/index';
 import { useFetch, useEditableName } from '../hooks';
 import { DeleteOutlined } from '@ant-design/icons'
-import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext,  useSortable,  verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
-export default function TasksList({ id }: { id: number }) {
+interface TasksListProps {
+  id: number;
+  tasks: Task[];
+  setTasks: (tasks: Task[]) => void;
+}
+
+export default function TasksList({ id, tasks, setTasks }: TasksListProps) {
   const { data: list, loading: loadingList, error: errorList } = useFetch<TasksListType>(`/lists/${id}`);
-  const { data: tasks, loading: loadingTasks, error: errorTasks } = useFetch<Task[]>(`/lists/${id}/tasks`);
+  const { data: fetchedTasks, loading: loadingTasks, error: errorTasks } = useFetch<Task[]>(`/lists/${id}/tasks`);
   const [isCreating, setIsCreating] = useState(false);
   const [taskName, setTaskName] = useState('');
   const [creating, setCreating] = useState(false);
-  const [tasksList, setTaskList] = useState<Task[]>([]);
   const [isDeleted, setIsDeleted] = useState(false);
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  
+  const { attributes, listeners, setNodeRef: setSortableRef, transform, transition, isDragging } = useSortable({ id });
+  const { setNodeRef: setDroppableRef } = useDroppable({ id });
 
   const loading = loadingList || loadingTasks;
   const error = errorList || errorTasks;
@@ -39,35 +46,10 @@ export default function TasksList({ id }: { id: number }) {
   });
 
   useEffect(() => {
-    if (tasks) {
-      setTaskList(tasks);
+    if (fetchedTasks && tasks.length === 0) {
+      setTasks(fetchedTasks);
     }
-  }, [tasks]);
-
-  const getTaskPos = (id: number) => {
-    return tasksList.findIndex(task => task.id === id);
-  }
-
-  const handleDragEnd = (event: any) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    
-    setTaskList((items) => {
-      const originalPos = getTaskPos(active.id);
-      const newPos = getTaskPos(over.id);
-      return arrayMove(items, originalPos, newPos);
-    });
-  }
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
+  }, [fetchedTasks]);
 
   const handleCreateTask = async () => {
     if (!taskName.trim()) {
@@ -90,7 +72,7 @@ export default function TasksList({ id }: { id: number }) {
       if (!response.ok) throw new Error('Failed to create task');
       
       const newTask = await response.json();
-      setTaskList([...tasksList, newTask]);
+      setTasks([...tasks, newTask]);
       setTaskName('');
       setIsCreating(false);
     } catch (err) {
@@ -108,6 +90,8 @@ export default function TasksList({ id }: { id: number }) {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleCreateTask();
+    } else if (e.key === 'Escape') {  
+      handleCancel();
     }
   };
 
@@ -135,47 +119,57 @@ export default function TasksList({ id }: { id: number }) {
       label: 'Delete',
       icon: <DeleteOutlined/>,
       danger: true,
-      onClick: handleDelete, //FIXME: list not deleting when button in dropdown clicked
+      onClick: handleDelete,
     },
-    
   ];
 
   const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      background: '#3d3d3d',
-    };
+    transform: CSS.Transform.toString(transform),
+    transition,
+    background: '#3d3d3d',
+    width: 300,
+    borderRadius: 8,
+    opacity: isDragging ? 0.4 : 1,
+    rotate: isDragging ? '3deg' : '0deg',
+    boxShadow: isDragging ? '0 10px 30px rgba(0,0,0,0.5)' : 'none',
+  };
+
+  const dragHandleStyle = {
+    cursor: isDragging ? 'grabbing' : 'grab',
+  };
 
   return (
     <div 
-      ref={setNodeRef}
+      ref={setSortableRef}
       style={style}
     >
-      <Flex gap= {160 } {...attributes} {...listeners} style={{ cursor: 'grab', paddingBottom: 5, maxWidth: 160 }}>
-        {listNameEditor.isEditing ? ( //FIXME: setup behavior for very long list names
+      <Flex gap={120} style={{ paddingBottom: 5, padding: '10px 15px', ...dragHandleStyle }} {...attributes} {...listeners}>
+        {listNameEditor.isEditing ? (
           <Input
             value={listNameEditor.name}
             onChange={(e) => listNameEditor.setName(e.target.value)}
             onKeyDown={listNameEditor.handleKeyPress}
             onBlur={listNameEditor.cancelEdit}
             autoFocus
-            style={{ margin: 10, minWidth: 50, width:70 }}
+            style={{ margin: 0, minWidth: 50, width: 150 }}
             onPointerDown={(e) => e.stopPropagation()}
           />
         ) : (
           <div  
-            style={{ fontSize: 25, margin: 20, marginTop: 15, color: 'white', minWidth: 70, userSelect: 'none'}}
-            onClick={listNameEditor.startEditing}
-            onPointerDown={(e) => e.stopPropagation()}
+            style={{ fontSize: 20, fontWeight: 600, color: 'white', flex: 1, userSelect: 'none'}}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              listNameEditor.startEditing();
+            }}
           >
             {listNameEditor.name}
           </div>
         )}
         <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
           <Button 
-            style={{ marginTop: 15, color: 'white', background:'#3d3d3d', borderColor:'#3d3d3d', fontSize: 30, paddingBottom: 15}}
+            style={{ color: 'white', background:'transparent', border: 'none', fontSize: 24, padding: 0, height: 24, lineHeight: 1}}
             onMouseEnter={(e) => {e.currentTarget.style.background = '#8c7d0d'}}
-            onMouseLeave={(e) => {e.currentTarget.style.background = '#3d3d3d'}}
+            onMouseLeave={(e) => {e.currentTarget.style.background = 'transparent'}}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}  
           >
@@ -183,50 +177,66 @@ export default function TasksList({ id }: { id: number }) {
           </Button>
         </Dropdown>
       </Flex>
-      <List
-        style={{ margin:20, marginBottom: 5, width: 300 }}
+      <div 
+        ref={setDroppableRef} 
+        style={{ 
+          minHeight: 100,
+          ...dragHandleStyle
+        }}
+        {...attributes}
+        {...listeners}
       >
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd} collisionDetection={closestCenter} ////FIXME: setup behavior dnd for cards
-        >
-          <SortableContext items={tasksList} strategy={verticalListSortingStrategy}>
-            {!loading && !error && tasksList && tasksList.map(card => (<TaskCard key={card.id} id={card.id} />))}
+        <List style={{ margin: '0 10px', marginBottom: 5, padding: 0, minHeight: 50 }}>
+          <SortableContext items={tasks} strategy={verticalListSortingStrategy}>
+            {!loading && !error && tasks && tasks.map(card => (
+              <TaskCard key={card.id} id={card.id} onDelete={() => setTasks(tasks.filter(t => t.id !== card.id))} />
+            ))}
           </SortableContext>
-        </DndContext>
-      </List>
+        </List>
+      </div>
       
-      {isCreating ? (
-        <div style={{ marginLeft: 20, marginBottom: 5, width: 300 }}>
-          <Input
-            placeholder="Enter task name..."
-            value={taskName}
-            onChange={(e) => setTaskName(e.target.value)}
-            onKeyUp={handleKeyPress}
-            autoFocus
-            style={{ marginBottom: 10 }}
-          />
-          <Space>
-            <Button 
-              type="primary"
-              onClick={handleCreateTask}
-              loading={creating}
-            >
-              Add Task
-            </Button>
-            <Button onClick={handleCancel}>
-              X
-            </Button>
-          </Space>
-        </div>
-      ) : (
-        <Button 
-          style = {{background: '#3d3d3d', borderColor:'#3d3d3d', color: 'white', marginLeft:20, marginBottom:5, padding:10, width: 300, display: 'flex', justifyContent: 'flex-start'}}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#8c7d0d'}
-          onMouseLeave={(e) => e.currentTarget.style.background = '#3d3d3d'}
-          onClick={() => setIsCreating(true)}
-        >
-          + Create
-        </Button>
-      )}
+      <div 
+        style={{ padding: '0 10px 10px 10px', ...dragHandleStyle }}
+        {...attributes}
+        {...listeners}
+      >
+        {isCreating ? (
+          <div style={{ marginBottom: 5 }}>
+            <Input
+              placeholder="Enter task name..."
+              value={taskName}
+              onChange={(e) => setTaskName(e.target.value)}
+              onKeyUp={handleKeyPress}
+              autoFocus
+              style={{ marginBottom: 10 }}
+              onPointerDown={(e) => e.stopPropagation()}
+            />
+            <Space>
+              <Button 
+                type="primary"
+                onClick={handleCreateTask}
+                loading={creating}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                Add Task
+              </Button>
+              <Button onClick={handleCancel} onPointerDown={(e) => e.stopPropagation()}>
+                X
+              </Button>
+            </Space>
+          </div>
+        ) : (
+          <Button 
+            style = {{background: '#3d3d3d', borderColor:'#3d3d3d', color: 'white', padding:10, width: '100%', display: 'flex', justifyContent: 'flex-start'}}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#8c7d0d'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#3d3d3d'}
+            onClick={() => setIsCreating(true)}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            + Create
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
