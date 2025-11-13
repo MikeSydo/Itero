@@ -102,7 +102,7 @@ export default function KanbanBoard({ id }: { id: number }) {
     useSensor(TouchSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-
+  //TODO: Add button to return back(in route boards)
   return (
     <div style={{ background: '#293244', minHeight: '100vh' }}>
       <Flex   

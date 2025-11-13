@@ -3,11 +3,8 @@
 import { join } from 'node:path';
 import { defineConfig } from '@umijs/max';
 import defaultSettings from './defaultSettings';
-import proxy from './proxy';
-
 import routes from './routes';
 
-const { UMI_ENV = 'dev' } = process.env;
 
 /**
  * @name 使用公共路径
