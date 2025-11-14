@@ -1,10 +1,10 @@
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { SettingDrawer } from '@ant-design/pro-components';
+import { ConfigProvider, theme } from 'antd';
 import defaultSettings from '../config/defaultSettings';
 import '@ant-design/v5-patch-for-react-19';
 
 const isDev = process.env.NODE_ENV === 'development';
-const isDevOrTest = isDev || process.env.CI;
 
 export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
@@ -20,23 +20,22 @@ export const layout = ({ initialState, setInitialState }: any) => {
       locale: false,
     },
     childrenRender: (children: any) => {
+      const isDarkTheme = initialState?.settings?.navTheme === 'realDark';
+      const primaryColor = initialState?.settings?.colorPrimary || '#1890ff';
+      
       return (
-        <>
+        <ConfigProvider
+          theme={{
+            cssVar: true,
+            algorithm: isDarkTheme ? theme.darkAlgorithm : theme.defaultAlgorithm,
+            token: {
+              colorPrimary: primaryColor,
+              fontFamily: 'AlibabaSans, sans-serif',
+            },
+          }}
+        >
           {children}
-          {isDevOrTest && (
-            <SettingDrawer 
-              disableUrlParams
-              enableDarkTheme
-              settings={initialState?.settings}
-              onSettingChange={(settings: any) => {
-                setInitialState((preInitialState: any) => ({
-                  ...preInitialState,
-                  settings,
-                }));
-              }}
-            />
-          )}
-        </>
+        </ConfigProvider>
       );
     },
     ...initialState?.settings,
