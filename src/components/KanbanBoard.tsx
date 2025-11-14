@@ -1,14 +1,15 @@
 import type { kanbanBoard as KanbanBoardType, TasksList as TasksListType, Task } from "types/index";
 import { useFetch, useEditableName } from "../hooks";
 import { TasksList } from "./";
-import { Flex, Button, Input, Space } from 'antd'
+import { Flex, Button, Input, Space, MenuProps, Dropdown } from 'antd'
 import { useState, useEffect } from "react";
 import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors, DragEndEvent, DragOverEvent, closestCorners, pointerWithin, rectIntersection } from '@dnd-kit/core';
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { useNavigate } from "@umijs/max";
 import { ProLayout } from '@ant-design/pro-layout';
+import { DeleteOutlined } from "@ant-design/icons";
 
-export default function KanbanBoard({ id }: { id: number }) {
+export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (id: number) => void }) {
   const { data:board, loading:loadingBoard, error:errorBoard } = useFetch<KanbanBoardType>(`/boards/${id}`);
   const { data:lists, loading:loadingLists, error:errorLists } = useFetch<TasksListType[]>(`/boards/${id}/lists`);
   const [isCreating, setIsCreating] = useState(false);
@@ -16,6 +17,7 @@ export default function KanbanBoard({ id }: { id: number }) {
   const [creating, setCreating] = useState(false);
   const [displayLists, setDisplayLists] = useState<TasksListType[]>([]);
   const [allTasks, setAllTasks] = useState<Record<number, Task[]>>({});
+  const [isDeleted, setIsDeleted] = useState(false);
 
   const loading = loadingBoard || loadingLists;
   const error = errorBoard || errorLists;
@@ -104,22 +106,18 @@ export default function KanbanBoard({ id }: { id: number }) {
     const activeId = active.id as number;
     const overId = over.id as number;
 
-    // Check if dragging a list - don't handle in dragOver
     const activeListIndex = displayLists.findIndex(list => list.id === activeId);
     if (activeListIndex !== -1) return;
 
-    // Find which lists the active and over items belong to
     const activeListId = findTaskList(activeId);
     let overListId = findTaskList(overId);
 
-    // If over is a list (droppable), use that list
     if (displayLists.some(list => list.id === overId)) {
       overListId = overId;
     }
 
     if (!activeListId || !overListId) return;
 
-    // Moving to different list or reordering within same list
     setAllTasks(prev => {
       const sourceTasks = prev[activeListId] || [];
       const destTasks = prev[overListId] || [];
@@ -129,7 +127,6 @@ export default function KanbanBoard({ id }: { id: number }) {
       
       if (!task) return prev;
 
-      // If same list, use arrayMove for smooth reordering
       if (activeListId === overListId) {
         const overIndex = sourceTasks.findIndex(t => t.id === overId);
         if (taskIndex === overIndex) return prev;
@@ -140,16 +137,12 @@ export default function KanbanBoard({ id }: { id: number }) {
         };
       }
 
-      // Different lists
       const newSourceTasks = sourceTasks.filter(t => t.id !== activeId);
       
-      // Find position in destination list
       let newDestTasks;
       if (displayLists.some(list => list.id === overId)) {
-        // Dropped on list itself - add to end
         newDestTasks = [...destTasks, task];
       } else {
-        // Dropped on a task - insert at that position
         const overIndex = destTasks.findIndex(t => t.id === overId);
         newDestTasks = [...destTasks];
         newDestTasks.splice(overIndex, 0, task);
@@ -170,21 +163,17 @@ export default function KanbanBoard({ id }: { id: number }) {
     const activeId = active.id as number;
     const overId = over.id as number;
 
-    // Check if dragging a list
     const activeListIndex = displayLists.findIndex(list => list.id === activeId);
     const overListIndex = displayLists.findIndex(list => list.id === overId);
 
     if (activeListIndex !== -1 && overListIndex !== -1) {
-      // Dragging lists
       setDisplayLists((items) => arrayMove(items, activeListIndex, overListIndex));
       return;
     }
 
-    // Dragging a task - update server if moved to different list
     const activeListId = findTaskList(activeId);
     let overListId = findTaskList(overId);
 
-    // If over is a list (droppable), use that list
     if (displayLists.some(list => list.id === overId)) {
       overListId = overId;
     }
@@ -192,7 +181,6 @@ export default function KanbanBoard({ id }: { id: number }) {
     if (!activeListId) return;
 
     if (activeListId !== overListId && overListId) {
-      // Moved to different list - update on server
       fetch(`${api}/tasks/${activeId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -209,6 +197,34 @@ export default function KanbanBoard({ id }: { id: number }) {
     }),
     useSensor(TouchSensor),
   );
+
+   const handleDelete = async () => {
+    try {
+      const response = await fetch(`${api}/boards/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete board');
+      
+      if (onDelete) {
+        onDelete(id);
+      }
+      
+      navigate('/boards');
+    } catch (err) {
+      console.error('Error deleting board:', err);
+    }
+  };
+
+  const menuItems: MenuProps['items'] = [
+    {
+      key: 'delete',
+      label: 'Delete',
+      icon: <DeleteOutlined/>,
+      danger: true,
+      onClick: handleDelete,
+    },
+  ];
 
   return (
     <>
@@ -243,8 +259,9 @@ export default function KanbanBoard({ id }: { id: number }) {
               </Button>
             )}
             <Space>
-              <Button>+ Поділитися(Not worked)</Button> 
-              <Button>...(Not worked)</Button>
+              <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+                <Button>...</Button>
+              </Dropdown>  
             </Space>
           </Flex>
           <Flex style={{ overflowX: 'auto', padding: 20, paddingTop: 40, height: '100%' }} gap={20} align="start">

@@ -64,11 +64,15 @@ export default function Boards() {
     }
   };
 
+  const handleDeleteBoard = (deletedBoardId: number) => {
+    setBoardsId(boardsId.filter(id => id !== deletedBoardId));
+  };
+
   return (
     <>
-      <Outlet />
+      <Outlet context={{ onDeleteBoard: handleDeleteBoard }} />
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-start' }}>
-        {boardsId.map(id => <BoardCard key={id} id={id}></BoardCard>)}
+        {boardsId.map(id => <BoardCard key={id} id={id} onDelete={handleDeleteBoard} />)}
         {isCreating ? (
           <Card style={{ width: 350, height: 150, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <Input

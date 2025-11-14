@@ -62,4 +62,21 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.delete('/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ error: 'Invalid board id' });
+  }
+
+  try {
+    await prisma.kanbanBoard.delete({
+      where: { id },
+    });
+    return res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting board:', error);
+    return res.status(404).json({ error: 'Board not found' });
+  }
+});
+
 export default router;

@@ -3,12 +3,17 @@ import { useFetch } from '@/hooks';
 import type  { kanbanBoard as KanbanBoardType } from 'types/index';
 import { useNavigate } from '@umijs/max';
 
-export default function BoardCard({id}: {id: number}){
+interface BoardCardProps {
+  id: number;
+  onDelete?: (id: number) => void;
+}
+
+export default function BoardCard({id, onDelete}: BoardCardProps){
     const {data, loading, error} = useFetch<KanbanBoardType>(`/boards/${id}`);
     const navigate = useNavigate();
 
     const MoveToBoard = () => {
-        navigate(`/boards/${id}`);
+        navigate(`/boards/${id}`, { state: { onDelete } });
     }
 
     return(
