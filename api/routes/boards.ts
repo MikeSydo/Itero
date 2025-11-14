@@ -24,7 +24,10 @@ router.get('/:id/lists', async (req, res) => {
   if (!Number.isFinite(id)) {
     return res.status(400).json({ error: 'Invalid board id' });
   }
-  const lists = await prisma.tasksList.findMany({ where: { boardId: id } });
+  const lists = await prisma.tasksList.findMany({ 
+    where: { boardId: id },
+    orderBy: { position: 'asc' },
+  });
   return res.json(lists);
 });
 

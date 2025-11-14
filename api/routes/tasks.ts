@@ -5,7 +5,9 @@ const router = Router();
 const prisma = new PrismaClient();
 
 router.get('/', async (_req, res) => {
-  const tasks = await prisma.task.findMany();
+  const tasks = await prisma.task.findMany({
+    orderBy: { position: 'asc' },
+  });
   res.json(tasks);
 });
 
@@ -21,8 +23,16 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    const { listId } = req.body;
+    const maxPosition = await prisma.task.findFirst({
+      where: { listId },
+      orderBy: { position: 'desc' },
+      select: { position: true },
+    });
+    const position = (maxPosition?.position ?? -1) + 1;
+    
     const task = await prisma.task.create({
-      data: req.body,
+      data: { ...req.body, position },
     });
     res.status(201).json(task);
   } catch (error) {
@@ -42,6 +52,23 @@ router.delete('/:id', async (req, res) => {
     return res.status(204).send();
   } catch (error) {
     return res.status(400).json({ error: 'Failed to delete task' });
+  }
+});
+
+router.patch('/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ error: 'Invalid task id' });
+  }
+  
+  try {
+    const updatedTask = await prisma.task.update({
+      where: { id },
+      data: req.body,
+    });
+    return res.json(updatedTask);
+  } catch (error) {
+    return res.status(404).json({ error: 'Task not found' });
   }
 });
 

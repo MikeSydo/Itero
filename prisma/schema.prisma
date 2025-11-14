@@ -11,6 +11,7 @@ model Task {
   id     Int       @id @default(autoincrement())
   listId Int
   name   String
+  position Int @default(0)
   list   TasksList @relation(fields: [listId], references: [id], onDelete: Cascade)
 }
 
@@ -19,6 +20,7 @@ model TasksList {
   name    String
   boardId Int
   tasks   Task[]
+  position Int @default(0)
   board   KanbanBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
 }
 

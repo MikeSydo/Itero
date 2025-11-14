@@ -3,7 +3,7 @@ import { useFetch, useEditableName } from "../hooks";
 import { TasksList } from "./";
 import { Flex, Button, Input, Space, MenuProps, Dropdown } from 'antd'
 import { useState, useEffect } from "react";
-import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors, DragEndEvent, DragOverEvent, closestCorners, pointerWithin, rectIntersection } from '@dnd-kit/core';
+import { DndContext, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent, DragOverEvent, closestCorners } from '@dnd-kit/core';
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { useNavigate } from "@umijs/max";
 import { ProLayout } from '@ant-design/pro-layout';
@@ -156,7 +156,7 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
     });
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
 
@@ -167,7 +167,22 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
     const overListIndex = displayLists.findIndex(list => list.id === overId);
 
     if (activeListIndex !== -1 && overListIndex !== -1) {
-      setDisplayLists((items) => arrayMove(items, activeListIndex, overListIndex));
+      const newLists = arrayMove(displayLists, activeListIndex, overListIndex);
+      setDisplayLists(newLists);
+      
+      try {
+        await Promise.all(
+          newLists.map((list, index) =>
+            fetch(`${api}/lists/${list.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ position: index }),
+            })
+          )
+        );
+      } catch (err) {
+        console.error('Failed to update list positions:', err);
+      }
       return;
     }
 
@@ -178,14 +193,38 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
       overListId = overId;
     }
 
-    if (!activeListId) return;
+    if (!activeListId || !overListId) return;
 
-    if (activeListId !== overListId && overListId) {
-      fetch(`${api}/tasks/${activeId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listId: overListId }),
-      }).catch(err => console.error('Failed to update task list:', err));
+    const targetTasks = allTasks[overListId] || [];
+    
+    try {
+      await Promise.all(
+        targetTasks.map((task, index) =>
+          fetch(`${api}/tasks/${task.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              listId: overListId,
+              position: index 
+            }),
+          })
+        )
+      );
+
+      if (activeListId !== overListId) {
+        const sourceTasks = allTasks[activeListId] || [];
+        await Promise.all(
+          sourceTasks.map((task, index) =>
+            fetch(`${api}/tasks/${task.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ position: index }),
+            })
+          )
+        );
+      }
+    } catch (err) {
+      console.error('Failed to update task:', err);
     }
   }
 
