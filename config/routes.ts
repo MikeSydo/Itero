@@ -18,7 +18,7 @@ export default [
   },
   {
     path: '/boards',
-    name: 'boards',
+    name: 'Boards',
     component: './Boards',
   },
   {
@@ -31,6 +31,11 @@ export default [
         component: './CardPage',
       }
     ]
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: './Settings',
   },
   {
     path: '/settings',

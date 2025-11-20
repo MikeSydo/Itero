@@ -2,7 +2,6 @@ import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { ConfigProvider, theme } from 'antd';
 import defaultSettings from '../config/defaultSettings';
 import '@ant-design/v5-patch-for-react-19';
-import { useLocation } from '@umijs/max';
 
 export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
@@ -18,6 +17,7 @@ export const layout = ({ initialState }: any) => {
     menu: {
       locale: false,
     },
+    rightContentRender: () => null,
     childrenRender: (children: any) => {
       const isDarkTheme = initialState?.settings?.navTheme === 'realDark';
       const primaryColor = initialState?.settings?.colorPrimary || '#1890ff';
