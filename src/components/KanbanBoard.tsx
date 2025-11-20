@@ -17,7 +17,6 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
   const [creating, setCreating] = useState(false);
   const [displayLists, setDisplayLists] = useState<TasksListType[]>([]);
   const [allTasks, setAllTasks] = useState<Record<number, Task[]>>({});
-  const [isDeleted, setIsDeleted] = useState(false);
 
   const loading = loadingBoard || loadingLists;
   const error = errorBoard || errorLists;

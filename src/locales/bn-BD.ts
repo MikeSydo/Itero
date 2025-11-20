@@ -1,10 +1,10 @@
-import component from './bn-BD/component';
-import globalHeader from './bn-BD/globalHeader';
-import menu from './bn-BD/menu';
-import pages from './bn-BD/pages';
-import pwa from './bn-BD/pwa';
-import settingDrawer from './bn-BD/settingDrawer';
-import settings from './bn-BD/settings';
+import component from './en-US/component';
+import globalHeader from './en-US/globalHeader';
+import menu from './en-US/menu';
+import pages from './en-US/pages';
+import pwa from './en-US/pwa';
+import settingDrawer from './en-US/settingDrawer';
+import settings from './en-US/settings';
 
 export default {
   'navBar.lang': 'ভাষা',

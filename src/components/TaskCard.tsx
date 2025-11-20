@@ -6,6 +6,7 @@ import type { Task } from 'types/index';
 import { useFetch, useEditableName } from '../hooks';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useLocation, useNavigate, useParams } from '@umijs/max';
 
 interface TaskCardProps {
   id: number;
@@ -16,7 +17,8 @@ export default function TaskCard({ id, onDelete }: TaskCardProps) {
   const { data: task, loading, error } = useFetch<Task>(`/tasks/${id}`);
   const [isDeleted, setIsDeleted] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-
+  const { boardId } = useParams<{ boardId: string }>();
+  
   const api = `http://localhost:${process.env.PORT || 3000}`;
 
   const taskNameEditor = useEditableName({
@@ -72,8 +74,15 @@ export default function TaskCard({ id, onDelete }: TaskCardProps) {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleClick = async () => {
+    navigate(`/boards/${boardId}/c/${id}`);
+  }
+
   return (
-    <Card
+    <Card onClick={handleClick}
       ref={setNodeRef}
       {...attributes}
       {...listeners}

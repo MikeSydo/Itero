@@ -25,6 +25,12 @@ export default [
     path: '/boards/:boardId',
     component: './Board',
     layout: false,
+    routes: [
+      {
+        path: '/boards/:boardId/c/:cardId',
+        component: './CardPage',
+      }
+    ]
   },
   {
     path: '/settings',

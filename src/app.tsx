@@ -1,10 +1,8 @@
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
-import { SettingDrawer } from '@ant-design/pro-components';
 import { ConfigProvider, theme } from 'antd';
 import defaultSettings from '../config/defaultSettings';
 import '@ant-design/v5-patch-for-react-19';
-
-const isDev = process.env.NODE_ENV === 'development';
+import { useLocation } from '@umijs/max';
 
 export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
@@ -14,7 +12,8 @@ export async function getInitialState(): Promise<{
   };
 }
 
-export const layout = ({ initialState, setInitialState }: any) => {
+export const layout = ({ initialState }: any) => {
+  
   return {
     menu: {
       locale: false,
