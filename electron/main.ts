@@ -13,10 +13,8 @@ app.on('ready', () => {
   });
   if (isDev()) {
     mainWindow.loadURL(URL);
-    //mainWindow.loadFile('electron/test.html');
   } else {
     mainWindow.loadFile(path.join(app.getAppPath(), 'dist/index.html'));
-    //mainWindow.loadFile('electron/test.html');
   }
 });
 
