@@ -38,11 +38,6 @@ export default [
     component: './Settings',
   },
   {
-    path: '/settings',
-    name: 'Settings',
-    component: './Settings',
-  },
-  {
     path: '/*',
     component: './404',
   },

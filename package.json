@@ -10,39 +10,29 @@
     "build": "npm-run-all --parallel build:client build:api build:electron",
     "build:api": "tsc --project api/tsconfig.json",
     "build:client": "max build",
-    "build:electron": "npm run transpile:electron && electron-builder",
-    
+    "build:electron": "npm run transpile:electron",
     "dev": "npm-run-all --parallel dev:api dev:client dev:electron",
     "dev:web": "npm-run-all --parallel  dev:api dev:client",
     "dev:api": "cross-env NODE_ENV=development nodemon --watch api --ext ts --exec tsx api/server.ts",
     "dev:client": "cross-env UMI_ENV=dev max dev",
     "dev:electron": "npm run transpile:electron && cross-env NODE_ENV=development electron .",
-
-    "start": "npm-run-all --parallel  start:api start:client start:electron",
+    "start": "electron-forge start",
     "start:api": "cross-env NODE_ENV=production node api/dist/server.js",
     "start:client": "cross-env UMI_ENV=dev max dev",
     "start:electron": "cross-env NODE_ENV=development electron .",
     "start:dev": "cross-env UMI_ENV=dev max dev",
     "start:pre": "cross-env UMI_ENV=pre max dev",
     "start:test": "cross-env UMI_ENV=test max dev",
-
     "transpile:electron": "tsc --project electron/tsconfig.json",
-    "electron:dist:mac": "npm run transpile:electron && npm run build:electron && electron-builder --mac --arm64",
-    "electron:dist:win": "npm run transpile:electron && npm run build:electron && electron-builder --win --x64",
-    "electron:dist:linux": "npm run transpile:electron && npm run build:electron && electron-builder --linux --x64",
-
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-
     "test": "jest",
     "test:coverage": "npm run jest -- --coverage",
     "test:update": "npm run jest -- -u",
-
     "biome:lint": "npx @biomejs/biome lint",
     "lint": "npm run biome:lint && npm run tsc",
     "lint-staged": "lint-staged",
-
     "analyze": "cross-env ANALYZE=1 max build",
     "deploy": "npm run build && npm run gh-pages",
     "gh-pages": "gh-pages -d dist",
@@ -53,7 +43,9 @@
     "preview": "npm run build && max preview --port 8000",
     "record": "cross-env NODE_ENV=development UMI_ENV=test max record --scene=login",
     "serve": "umi-serve",
-    "tsc": "tsc --noEmit"
+    "tsc": "tsc --noEmit",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -71,6 +63,7 @@
     "classnames": "^2.5.1",
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
+    "electron-squirrel-startup": "^1.0.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
@@ -79,6 +72,14 @@
     "@biomejs/biome": "^2.1.1",
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
+    "@electron-forge/cli": "^7.10.2",
+    "@electron-forge/maker-deb": "^7.10.2",
+    "@electron-forge/maker-rpm": "^7.10.2",
+    "@electron-forge/maker-squirrel": "^7.10.2",
+    "@electron-forge/maker-zip": "^7.10.2",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.10.2",
+    "@electron-forge/plugin-fuses": "^7.10.2",
+    "@electron/fuses": "^1.8.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.3.0",
     "@types/cors": "^2.8.19",
@@ -92,7 +93,6 @@
     "cross-env": "^10.0.0",
     "dotenv": "^16.6.1",
     "electron": "^38.1.2",
-    "electron-builder": "^26.0.12",
     "express": "^5.1.0",
     "gh-pages": "^6.1.1",
     "husky": "^9.1.7",

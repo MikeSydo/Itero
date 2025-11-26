@@ -1,10 +1,24 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, protocol, net } from 'electron';
 import path from 'path';
-import { getPreloadPath } from './pathResolver.js';
 import { isDev } from './util.js';
 
 const PORT = process.env.CLIENT_PORT || 3001;
 const URL = `http://localhost:${PORT}`;
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'app',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      bypassCSP: true,
+      stream: true,
+      allowServiceWorkers: true,
+    }
+  }
+]);
 
 async function waitForServer(url: string, maxRetries = 30): Promise<boolean> {
   for (let i = 0; i < maxRetries; i++) {
@@ -14,19 +28,26 @@ async function waitForServer(url: string, maxRetries = 30): Promise<boolean> {
         return true;
       }
     } catch (error) {
-      // Server not ready yet, wait and retry
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
   return false;
 }
 
-app.on('ready', async () => {
+app.whenReady().then(async () => {
+  if (!isDev()) {
+    protocol.handle('app', (request) => {
+      const url = request.url.slice('app://'.length);
+      const filePath = path.normalize(path.join(__dirname, '..', 'dist', url));
+      return net.fetch(`file:///${filePath}`);
+    });
+  }
+
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: getPreloadPath(),
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
 
@@ -40,6 +61,12 @@ app.on('ready', async () => {
       console.error('Development server failed to start');
     }
   } else {
-    mainWindow.loadFile(path.join(app.getAppPath(), '/dist-react/index.html'));
+    mainWindow.loadURL('app://./index.html');
+  }
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
   }
 });
