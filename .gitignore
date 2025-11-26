@@ -51,3 +51,6 @@ build
 .env
 .env.local
 .env.*.local
+
+# database
+*.db
