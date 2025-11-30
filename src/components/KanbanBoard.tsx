@@ -275,9 +275,19 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
         fixedHeader
         menuRender={false}
         footerRender={false}
-        onMenuHeaderClick={() => navigate('/boards')}
         contentStyle={{ padding: 0, margin: 0 }}
-        style={{ '--ant-pro-layout-header-border': 'none'} as any}>
+        style={{ '--ant-pro-layout-header-border': 'none'} as any}
+        headerContentRender={() => (
+          <Flex justify="left" align="center" style={{ width: '100%' }}>
+            <Button 
+              type="text" 
+              onClick={() => navigate('/boards')}
+              style={{ color: 'white', fontSize: 16 }}
+            >
+              Boards
+            </Button>
+          </Flex>
+        )}>
         <div style={{ background: '#2a3245', minHeight: 'calc(100vh - 64px)', border: 'none' }}>
           <Flex justify="space-between" align="center" style={{ padding: '16px 24px', background: 'rgba(0, 0, 0, 0.2)', 
             backdropFilter: 'blur(10px)', position: 'sticky', top: 0, zIndex: 10 }}>
@@ -302,7 +312,6 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
               <Dropdown menu={{ items: menuItems }} trigger={['click']}>
                 <Button>...</Button>
               </Dropdown>  
-              <Button>...</Button>
             </Space>
           </Flex>
           <Flex style={{ overflowX: 'auto', padding: 20, paddingTop: 40, height: '100%' }} gap={20} align="start">
