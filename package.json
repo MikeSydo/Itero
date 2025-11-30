@@ -7,7 +7,7 @@
   "author": "MikeSydo",
   "main": "dist-electron/main.js",
   "scripts": {
-    "build": "npm-run-all --parallel build:client build:api build:electron",
+    "build": "npm-run-all build:api build:client build:electron",
     "build:api": "tsc --project api/tsconfig.json",
     "build:client": "max build",
     "build:electron": "npm run transpile:electron",

@@ -16,9 +16,30 @@ protocol.registerSchemesAsPrivileged([
       bypassCSP: true,
       stream: true,
       allowServiceWorkers: true,
-    }
-  }
+    },
+  },
 ]);
+
+async function startAPIServer() {
+  try {
+    const serverPath = path.join(__dirname, '..', 'api', 'dist', 'server.js');
+    console.log('Starting API server from:', serverPath);
+    
+    const fs = require('fs');
+    if (!fs.existsSync(serverPath)) {
+      console.error('Server file not found at:', serverPath);
+      return false;
+    }
+    
+    require(serverPath);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    console.log('API server started on http://localhost:3000');
+    return true;
+  } catch (error) {
+    console.error('Failed to start API server:', error);
+    return false;
+  }
+}
 
 async function waitForServer(url: string, maxRetries = 30): Promise<boolean> {
   for (let i = 0; i < maxRetries; i++) {
@@ -36,6 +57,8 @@ async function waitForServer(url: string, maxRetries = 30): Promise<boolean> {
 
 app.whenReady().then(async () => {
   if (!isDev()) {
+    await startAPIServer();
+    
     protocol.handle('app', (request) => {
       const url = request.url.slice('app://'.length);
       const filePath = path.normalize(path.join(__dirname, '..', 'dist', url));
@@ -55,7 +78,6 @@ app.whenReady().then(async () => {
     console.log('Waiting for development server...');
     const serverReady = await waitForServer(URL);
     if (serverReady) {
-      console.log('Development server is ready, loading URL:', URL);
       mainWindow.loadURL(URL);
     } else {
       console.error('Development server failed to start');
@@ -70,9 +92,3 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
