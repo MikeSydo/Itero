@@ -28,7 +28,7 @@ export default function Board() {
           open={true}
           onCancel={() => navigate(-1)}
           footer={null}
-          width={300}
+          width={500}
         >
           <Outlet />
         </Modal>

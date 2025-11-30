@@ -1,43 +1,29 @@
+// TaskCard.tsx
 import { useState } from 'react';
-import { Card, Button, Dropdown, Input } from 'antd';
+import { Card, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import type { Task } from 'types/index';
-import { useFetch, useEditableName } from '../hooks';
+// import { useFetch } from '../hooks'; // <-- Більше не потрібен тут
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useLocation, useNavigate, useParams } from '@umijs/max';
+import { useNavigate, useParams } from '@umijs/max';
 
 interface TaskCardProps {
-  id: number;
+  task: Task; // <-- Змінюємо id на task
   onDelete: () => void;
 }
 
-export default function TaskCard({ id, onDelete }: TaskCardProps) {
-  const { data: task, loading, error } = useFetch<Task>(`/tasks/${id}`);
+export default function TaskCard({ task, onDelete }: TaskCardProps) {
+  const { id } = task; 
   const [isDeleted, setIsDeleted] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const { boardId } = useParams<{ boardId: string }>();
   
   const api = `http://localhost:${process.env.PORT || 3000}`;
 
-  const taskNameEditor = useEditableName({
-    initialName: task?.name || '',
-    onUpdate: async (newName) => {
-      const response = await fetch(`${api}/tasks/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: newName }),
-      });
-      if (!response.ok) throw new Error('Failed to update task name');
-    },
-  });
-
   const handleDelete = async () => {
     try {
-      const api =  `http://localhost:${process.env.PORT || 3000}`;
       const response = await fetch(`${api}/tasks/${id}`, {
         method: 'DELETE',
       });
@@ -75,18 +61,17 @@ export default function TaskCard({ id, onDelete }: TaskCardProps) {
   };
 
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const handleClick = async () => {
+  const handleOpenTaskDetails = async () => {
     navigate(`/boards/${boardId}/c/${id}`);
   }
 
   return (
-    <Card onClick={handleClick}
+    <Card onClick={handleOpenTaskDetails}
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      title={<span style={{color:'white'}}>{loading ? 'Loading…' : task ? task.name : error ?? 'Error'}</span>}
+      title={<span style={{color:'white'}}>{task.name}</span>} 
       variant='borderless'
       style={style}
       styles={{header:{borderBottom: 0, background: 'black'}, body:{background:'black', color:'white', marginTop:-30}}}
@@ -102,9 +87,6 @@ export default function TaskCard({ id, onDelete }: TaskCardProps) {
           ...
         </Button>
       </Dropdown>
-      {loading && <div>Loading…</div>}
-      {error && <div style={{ color: 'salmon' }}>{error}</div>}
-      {!loading && !error && task && (<div style={{ opacity: 0.7 }}>ID: {task.id}</div>)}
     </Card>
   );
 }

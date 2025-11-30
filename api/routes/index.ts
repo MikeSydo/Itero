@@ -8,5 +8,5 @@ const router = Router();
 router.use('/tasks', tasksRouter);
 router.use('/lists', listsRouter);
 router.use('/boards', boardsRouter);
-
+router.use('/attachments', tasksRouter);
 export default router;

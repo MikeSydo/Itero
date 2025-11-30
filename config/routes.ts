@@ -28,7 +28,7 @@ export default [
     routes: [
       {
         path: '/boards/:boardId/c/:cardId',
-        component: './CardPage',
+        component: './Task',
       }
     ]
   },

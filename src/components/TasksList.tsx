@@ -189,7 +189,7 @@ export default function TasksList({ id, tasks, setTasks }: TasksListProps) {
         <List style={{ margin: '0 10px', marginBottom: 5, padding: 0, minHeight: 50 }}>
           <SortableContext items={tasks} strategy={verticalListSortingStrategy}>
             {!loading && !error && tasks && tasks.map(card => (
-              <TaskCard key={card.id} id={card.id} onDelete={() => setTasks(tasks.filter(t => t.id !== card.id))} />
+              <TaskCard key={card.id} task={card} onDelete={() => setTasks(tasks.filter(t => t.id !== card.id))} />
             ))}
           </SortableContext>
         </List>

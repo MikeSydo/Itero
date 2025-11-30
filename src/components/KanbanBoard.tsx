@@ -45,6 +45,23 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
       }
   }, [lists]);
 
+  useEffect(() => {
+  const handleTaskUpdate = (event: any) => {
+    const { taskId, listId } = event.detail;
+    if (listId) {
+      fetch(`${api}/lists/${listId}/tasks`)
+        .then(res => res.json())
+        .then(tasks => {
+          setAllTasks(prev => ({ ...prev, [listId]: tasks }));
+        })
+        .catch(err => console.error('Failed to refresh tasks:', err));
+    }
+  };
+
+  window.addEventListener('taskUpdated', handleTaskUpdate);
+  return () => window.removeEventListener('taskUpdated', handleTaskUpdate);
+}, [api]);
+
   const handleCreateList = async () => {
   if (!listName.trim()) {
     return;

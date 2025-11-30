@@ -26,10 +26,6 @@ model Task {
   description String?
   startedDate DateTime?
   endDate DateTime?
-  repeatInterval String?
-  repeatDays      String?
-  hasReminder Boolean @default(false)
-  reminderTime    DateTime?
   attachments     Attachment[]
   list   TasksList @relation(fields: [listId], references: [id], onDelete: Cascade)
 }
