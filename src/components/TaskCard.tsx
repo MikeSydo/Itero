@@ -1,16 +1,14 @@
-// TaskCard.tsx
 import { useState } from 'react';
 import { Card, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import type { Task } from 'types/index';
-// import { useFetch } from '../hooks'; // <-- Більше не потрібен тут
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useNavigate, useParams } from '@umijs/max';
 
 interface TaskCardProps {
-  task: Task; // <-- Змінюємо id на task
+  task: Task;
   onDelete: () => void;
 }
 
@@ -47,7 +45,10 @@ export default function TaskCard({ task, onDelete }: TaskCardProps) {
       label: 'Delete',
       icon: <DeleteOutlined/>,
       danger: true,
-      onClick: handleDelete,
+      onClick: (info) => {
+        info.domEvent.stopPropagation(); 
+        handleDelete();
+      },
     },
   ];
 
