@@ -33,7 +33,6 @@ export default function Task() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   const [taskName, setTaskName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
 
@@ -53,12 +52,7 @@ export default function Task() {
       fetchAttachments();
     }
   }, [taskId]);
-
-  const showMessage = (type: 'success' | 'error', text: string) => {
-    setMessage({ type, text });
-    setTimeout(() => setMessage(null), 3000);
-  };
-
+  
   const updateTaskName = async (value: string) => {
     if (!taskId || !value.trim()) return;
     
@@ -73,11 +67,9 @@ export default function Task() {
         detail: { taskId, listId: task?.listId } 
       }));
 
-      showMessage('success', 'Назву оновлено');
       setIsEditingName(false);
     } catch (error) {
       console.error(error);
-      showMessage('error', 'Помилка оновлення назви');
     }
   };
 
@@ -105,10 +97,8 @@ export default function Task() {
         body: JSON.stringify({ description: value }),
       });
       if (!response.ok) throw new Error('Failed to update description');
-      showMessage('success', 'Опис оновлено');
     } catch (error) {
       console.error(error);
-      showMessage('error', 'Помилка оновлення опису');
     }
   };
 
@@ -125,10 +115,8 @@ export default function Task() {
         }),
       });
       if (!response.ok) throw new Error('Failed to update dates');
-      showMessage('success', 'Дати оновлено');
     } catch (error) {
       console.error(error);
-      showMessage('error', 'Помилка оновлення дат');
     }
   };
 
@@ -146,11 +134,9 @@ export default function Task() {
         body: formData,
       });
       if (!response.ok) throw new Error('Failed to upload file');
-      showMessage('success', 'Файл завантажено');
       fetchAttachments();
     } catch (error) {
       console.error(error);
-      showMessage('error', 'Помилка завантаження файлу');
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -163,11 +149,9 @@ export default function Task() {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete attachment');
-      showMessage('success', 'Файл видалено');
       setAttachments(attachments.filter(a => a.id !== attachmentId));
     } catch (error) {
       console.error(error);
-      showMessage('error', 'Помилка видалення файлу');
     }
   };
 
@@ -214,19 +198,6 @@ export default function Task() {
 
   return (
     <div style={{ padding: '20px 0', maxWidth: 800, margin: '0 auto' }}>
-      {message && (
-        <div style={{
-          padding: '12px 16px',
-          marginBottom: 20,
-          borderRadius: 6,
-          backgroundColor: message.type === 'success' ? '#f6ffed' : '#fff2f0',
-          border: `1px solid ${message.type === 'success' ? '#b7eb8f' : '#ffccc7'}`,
-          color: message.type === 'success' ? '#52c41a' : '#ff4d4f'
-        }}>
-          {message.text}
-        </div>
-      )}
-
       {isEditingName ? (
         <input
           type="text"
@@ -281,7 +252,7 @@ export default function Task() {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           onBlur={() => updateDescription(description)}
-          placeholder="Додати детальніший опис..."
+          placeholder="Add description..."
           style={{
             width: '100%',
             minHeight: 100,
