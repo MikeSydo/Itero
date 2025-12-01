@@ -7,7 +7,7 @@ import { DndContext, PointerSensor, TouchSensor, useSensor, useSensors, DragEndE
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { useModel, useNavigate } from "@umijs/max";
 import { ProLayout } from '@ant-design/pro-layout';
-import { DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, StarOutlined, StarFilled } from "@ant-design/icons";
 
 export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (id: number) => void }) {
   const { data:board, loading:loadingBoard, error:errorBoard } = useFetch<KanbanBoardType>(`/boards/${id}`);
@@ -17,6 +17,7 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
   const [creating, setCreating] = useState(false);
   const [displayLists, setDisplayLists] = useState<TasksListType[]>([]);
   const [allTasks, setAllTasks] = useState<Record<number, Task[]>>({});
+  const [isFavorite, setIsFavorite] = useState(false);
   const { initialState } = useModel('@@initialState');
 
   const loading = loadingBoard || loadingLists;
@@ -44,6 +45,12 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
           setDisplayLists(lists);
       }
   }, [lists]);
+
+  useEffect(() => {
+      if (board) {
+          setIsFavorite(board.isFavorite || false);
+      }
+  }, [board]);
 
   useEffect(() => {
   const handleTaskUpdate = (event: any) => {
@@ -287,7 +294,33 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
     }
   };
 
+  const handleToggleFavorite = async () => {
+    const newFavoriteState = !isFavorite;
+    
+    try {
+      const response = await fetch(`${api}/boards/${id}/favorite`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isFavorite: newFavoriteState }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update favorite status');
+      
+      setIsFavorite(newFavoriteState);
+    } catch (err) {
+      console.error('Error updating favorite:', err);
+    }
+  };
+
   const menuItems: MenuProps['items'] = [
+    {
+      key: 'favorite',
+      label: isFavorite ? 'Видалити з улюблених' : 'Додати до улюблених',
+      icon: isFavorite ? <StarFilled /> : <StarOutlined />,
+      onClick: handleToggleFavorite,
+    },
     {
       key: 'delete',
       label: 'Delete',

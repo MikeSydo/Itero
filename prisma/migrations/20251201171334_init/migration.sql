@@ -19,10 +19,6 @@ CREATE TABLE "Task" (
     "description" TEXT,
     "startedDate" DATETIME,
     "endDate" DATETIME,
-    "repeatInterval" TEXT,
-    "repeatDays" TEXT,
-    "hasReminder" BOOLEAN NOT NULL DEFAULT false,
-    "reminderTime" DATETIME,
     CONSTRAINT "Task_listId_fkey" FOREIGN KEY ("listId") REFERENCES "TasksList" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -38,5 +34,6 @@ CREATE TABLE "TasksList" (
 -- CreateTable
 CREATE TABLE "KanbanBoard" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "name" TEXT NOT NULL
+    "name" TEXT NOT NULL,
+    "isFavorite" BOOLEAN NOT NULL DEFAULT false
 );

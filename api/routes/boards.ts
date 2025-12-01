@@ -53,6 +53,28 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
+router.patch('/:id/favorite', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ error: 'Invalid board id' });
+  }
+  
+  const { isFavorite } = req.body;
+  if (typeof isFavorite !== 'boolean') {
+    return res.status(400).json({ error: 'isFavorite must be a boolean' });
+  }
+
+  try {
+    const updatedBoard = await prisma.kanbanBoard.update({
+      where: { id },
+      data: { isFavorite },
+    });
+    return res.json(updatedBoard);
+  } catch (error) {
+    return res.status(404).json({ error: 'Board not found' });
+  }
+});
+
 router.post('/', async (req, res) => {
   try {
     const board = await prisma.kanbanBoard.create({

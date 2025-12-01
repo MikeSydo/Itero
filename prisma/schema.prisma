@@ -42,5 +42,6 @@ model TasksList {
 model KanbanBoard {
   id    Int         @id @default(autoincrement())
   name  String
+  isFavorite Boolean @default(false)
   lists TasksList[]
 }

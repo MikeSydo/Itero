@@ -20,27 +20,6 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-async function startAPIServer() {
-  try {
-    const serverPath = path.join(__dirname, '..', 'api', 'dist', 'server.js');
-    console.log('Starting API server from:', serverPath);
-    
-    const fs = require('fs');
-    if (!fs.existsSync(serverPath)) {
-      console.error('Server file not found at:', serverPath);
-      return false;
-    }
-    
-    require(serverPath);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    console.log('API server started on http://localhost:3000');
-    return true;
-  } catch (error) {
-    console.error('Failed to start API server:', error);
-    return false;
-  }
-}
-
 async function waitForServer(url: string, maxRetries = 30): Promise<boolean> {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -57,7 +36,6 @@ async function waitForServer(url: string, maxRetries = 30): Promise<boolean> {
 
 app.whenReady().then(async () => {
   if (!isDev()) {
-    await startAPIServer();
     
     protocol.handle('app', (request) => {
       const url = request.url.slice('app://'.length);

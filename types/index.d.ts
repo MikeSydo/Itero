@@ -11,4 +11,5 @@ export type TasksList = {
 export type kanbanBoard = {
   id: number;
   name: string;
+  isFavorite?: boolean;
 }
