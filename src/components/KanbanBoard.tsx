@@ -125,7 +125,21 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
     const overId = over.id as number;
 
     const activeListIndex = displayLists.findIndex(list => list.id === activeId);
-    if (activeListIndex !== -1) return;
+    let overListIndex = displayLists.findIndex(list => list.id === overId);
+
+    if (activeListIndex !== -1) {
+      if (overListIndex === -1) {
+        const taskListId = findTaskList(overId);
+        if (taskListId) {
+          overListIndex = displayLists.findIndex(list => list.id === taskListId);
+        }
+      }
+      
+      if (overListIndex !== -1 && activeListIndex !== overListIndex) {
+        setDisplayLists(arrayMove(displayLists, activeListIndex, overListIndex));
+      }
+      return;
+    }
 
     const activeListId = findTaskList(activeId);
     let overListId = findTaskList(overId);
