@@ -71,6 +71,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Enable window dragging for Electron */
+.ant-pro-layout .ant-pro-layout-header {
+  -webkit-app-region: drag;
+}
+
+.ant-pro-layout .ant-pro-layout-header button,
+.ant-pro-layout .ant-pro-layout-header a,
+.ant-pro-layout .ant-pro-layout-header input {
+  -webkit-app-region: no-drag;
+}
+
 ul,
 ol {
   list-style: none;

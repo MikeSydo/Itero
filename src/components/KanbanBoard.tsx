@@ -357,7 +357,8 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
   return (
     <>
       <ProLayout
-        title = "itero"
+        logo="/itero-logo.png"
+        title = "Itero"
         layout="top"
         navTheme={isDarkTheme ? 'realDark' : 'light'}
         fixedHeader
@@ -366,18 +367,73 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
         contentStyle={{ padding: 0, margin: 0 }}
         style={{ '--ant-pro-layout-header-border': 'none'} as any}
         headerContentRender={() => (
-          <Flex justify="left" align="center" style={{ width: '100%' }}>
+          <Flex justify="space-between" align="center" style={{ width: '100%', WebkitAppRegion: 'drag' } as React.CSSProperties}>
             <Button 
               type="text" 
               onClick={() => navigate('/boards')}
-              style={{ color: 'white', fontSize: 16 }}
+              style={{ color: isDarkTheme ? 'white' : '#000', fontSize: 16, WebkitAppRegion: 'no-drag' } as React.CSSProperties}
             >
               Boards
             </Button>
+            {window.electronAPI && (
+              <div style={{ display: 'flex', gap: 0, WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+                <Button
+                  type="text"
+                  onClick={() => window.electronAPI?.minimizeWindow()}
+                  style={{ 
+                    color: isDarkTheme ? 'white' : '#000', 
+                    fontSize: 16,
+                    width: 46,
+                    height: 46,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingTop: 4,
+                    WebkitAppRegion: 'no-drag'
+                  } as React.CSSProperties}
+                >
+                  −
+                </Button>
+                <Button
+                  type="text"
+                  onClick={() => window.electronAPI?.maximizeWindow()}
+                  style={{ 
+                    color: isDarkTheme ? 'white' : '#000', 
+                    fontSize: 16,
+                    width: 46,
+                    height: 46,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    WebkitAppRegion: 'no-drag'
+                  } as React.CSSProperties}
+                >
+                  □
+                </Button>
+                <Button
+                  type="text"
+                  onClick={() => window.electronAPI?.closeWindow()}
+                  style={{ 
+                    color: isDarkTheme ? 'white' : '#000', 
+                    fontSize: 16,
+                    width: 46,
+                    height: 46,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    WebkitAppRegion: 'no-drag'
+                  } as React.CSSProperties}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e81123'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  ✕
+                </Button>
+              </div>
+            )}
           </Flex>
         )}>
-        <div style={{ background: '#2a3245', minHeight: 'calc(100vh - 64px)', border: 'none', display: 'flex', flexDirection: 'column' }}>
-          <Flex justify="space-between" align="center" style={{ padding: '16px 24px', background: 'rgba(0, 0, 0, 0.2)', 
+        <div style={{ background: isDarkTheme ? '#1a1a1a' : '#f5f5f5', minHeight: 'calc(100vh - 64px)', border: 'none', display: 'flex', flexDirection: 'column' }}>
+          <Flex justify="space-between" align="center" style={{ padding: '16px 24px', background: isDarkTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.5)', 
             backdropFilter: 'blur(10px)', flexShrink: 0, position: 'sticky', top: 0, zIndex: 10 }}>
             {boardNameEditor.isEditing ? (
               <Input
@@ -386,11 +442,11 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
                 onKeyDown={boardNameEditor.handleKeyPress}
                 onBlur={boardNameEditor.cancelEdit}
                 autoFocus
-                style={{ margin: 0, minWidth: 50, width:70 }}
+                style={{ margin: 0, fontSize: 30, width: 'auto', minWidth: 200, maxWidth: 500, height: 48, padding: '4px 11px', backgroundColor: isDarkTheme ? '#1f1f1f' : '#fff', color: isDarkTheme ? '#fff' : '#000', borderColor: isDarkTheme ? '#434343' : '#d9d9d9' }}
               />
             ) : (
               <Button
-                style={{ fontSize: 30, margin: 0, background: 'transparent', border: 'none', color: 'white', minWidth: 50}}
+                style={{ fontSize: 30, margin: 0, background: 'transparent', border: 'none', color: isDarkTheme ? 'white' : '#000', minWidth: 50, height: 48, padding: '4px 11px'}}
                 onClick={boardNameEditor.startEditing}
               >
                 {boardNameEditor.name}
@@ -405,7 +461,7 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
           <div style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1 }}>
             <Flex style={{ padding: 20, paddingTop: 40, height: '100%', minWidth: 'fit-content' }} gap={20} align="start">
             {error && <div style={{ color: 'salmon' }}>{error}</div>}
-            {loading && <div style={{ color: 'Black' }}>Loading…</div>}
+            {loading && <div style={{ color: isDarkTheme ? '#fff' : '#000' }}>Loading…</div>}
             <DndContext 
               sensors={sensors} 
               onDragEnd={handleDragEnd}
@@ -448,9 +504,9 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
                     </div>
                 ) : (
                     <Button 
-                      style = {{height: 60, fontSize: 25, opacity: 0.7, background: '#686d78', borderColor:'#3d3d3d', color: 'white', marginLeft:20, marginBottom:5, padding:10, width: 300, minWidth: 300, flexShrink: 0, display: 'flex', justifyContent: 'flex-start'}}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#8c7d0d'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = '#3d3d3d'}
+                      style = {{height: 60, fontSize: 25, opacity: 0.7, background: isDarkTheme ? '#2a2a2a' : '#e0e0e0', borderColor: isDarkTheme ? '#3d3d3d' : '#ccc', color: isDarkTheme ? 'white' : '#000', marginLeft:20, marginBottom:5, padding:10, width: 300, minWidth: 300, flexShrink: 0, display: 'flex', justifyContent: 'flex-start'}}
+                      onMouseEnter={(e) => e.currentTarget.style.background = isDarkTheme ? '#3d3d3d' : '#d0d0d0'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = isDarkTheme ? '#2a2a2a' : '#e0e0e0'}
                       onClick={() => setIsCreating(true)}
                     >
                     + New List

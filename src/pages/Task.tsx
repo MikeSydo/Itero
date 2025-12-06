@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from '@umijs/max';
+import { useParams, useModel } from '@umijs/max';
 import { Calendar, Paperclip, Trash2, Download, Loader } from 'lucide-react';
 import { useFetch } from '@/hooks';
 import type { Task, Attachment } from 'types/index';
@@ -7,6 +7,8 @@ import type { Task, Attachment } from 'types/index';
 export default function Task() {
   const { cardId } = useParams<{ cardId: string }>();
   const taskId = Number(cardId);
+  const { initialState } = useModel('@@initialState');
+  const isDarkTheme = initialState?.settings?.navTheme === 'realDark';
   
   const { data: task, loading: loadingTask, error: errorTask } = useFetch<Task>(`/tasks/${taskId}`);
   
@@ -226,7 +228,7 @@ export default function Task() {
   }
 
   return (
-    <div style={{ padding: '20px 0', maxWidth: 800, margin: '0 auto' }}>
+    <div style={{ padding: '20px', maxWidth: 800, margin: '0 auto', backgroundColor: isDarkTheme ? '#000' : '#fff', color: isDarkTheme ? '#fff' : '#000' }}>
       {isEditingName ? (
         <input
           type="text"
@@ -244,6 +246,7 @@ export default function Task() {
           autoFocus
           style={{
             width: '100%',
+            marginTop: 40,
             marginBottom: 20,
             fontSize: 20,
             fontWeight: 600,
@@ -251,14 +254,15 @@ export default function Task() {
             border: '2px solid #1890ff',
             borderRadius: 6,
             outline: 'none',
-            color: '#000',
-            backgroundColor: '#fff'
+            color: isDarkTheme ? '#fff' : '#000',
+            backgroundColor: isDarkTheme ? '#1f1f1f' : '#fff'
           }}
         />
       ) : (
         <h2 
           onClick={() => setIsEditingName(true)}
           style={{ 
+            marginTop: 40,
             marginBottom: 20, 
             fontSize: 20, 
             fontWeight: 600,
@@ -267,7 +271,7 @@ export default function Task() {
             borderRadius: 6,
             transition: 'background 0.2s'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+          onMouseEnter={(e) => e.currentTarget.style.background = isDarkTheme ? '#262626' : '#f5f5f5'}
           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
           {taskName}
@@ -276,7 +280,7 @@ export default function Task() {
 
       {/* Description */}
       <div style={{ marginBottom: 24 }}>
-        <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+        <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: isDarkTheme ? '#fff' : '#000' }}>
           Description
         </label>
         <textarea
@@ -289,10 +293,12 @@ export default function Task() {
             minHeight: 100,
             padding: 12,
             fontSize: 14,
-            border: '1px solid #d9d9d9',
+            border: isDarkTheme ? 'none' : '1px solid #d9d9d9',
             borderRadius: 6,
             fontFamily: 'inherit',
-            resize: 'vertical'
+            resize: 'vertical',
+            backgroundColor: isDarkTheme ? '#1f1f1f' : '#fff',
+            color: isDarkTheme ? '#fff' : '#000'
           }}
         />
       </div>
@@ -307,11 +313,12 @@ export default function Task() {
             gap: 8,
             padding: '8px 16px',
             marginBottom: 12,
-            background: '#fff',
-            border: '1px solid #d9d9d9',
+            background: isDarkTheme ? '#1f1f1f' : '#fff',
+            border: isDarkTheme ? 'none' : '1px solid #d9d9d9',
             borderRadius: 6,
             cursor: 'pointer',
-            fontSize: 14
+            fontSize: 14,
+            color: isDarkTheme ? '#fff' : '#000'
           }}
         >
           <Calendar size={16} />
@@ -331,9 +338,11 @@ export default function Task() {
                   onChange={(e) => handleEndDateChange(e.target.value)}
                   style={{
                     padding: '8px 12px',
-                    border: '1px solid #d9d9d9',
+                    border: isDarkTheme ? 'none' : '1px solid #d9d9d9',
                     borderRadius: 6,
-                    fontSize: 14
+                    fontSize: 14,
+                    backgroundColor: isDarkTheme ? '#1f1f1f' : '#fff',
+                    color: isDarkTheme ? '#fff' : '#000'
                   }}
                 />
                 {endDate && (() => {
@@ -407,9 +416,11 @@ export default function Task() {
                   onChange={(e) => handleStartDateChange(e.target.value)}
                   style={{
                     padding: '8px 12px',
-                    border: '1px solid #d9d9d9',
+                    border: isDarkTheme ? 'none' : '1px solid #d9d9d9',
                     borderRadius: 6,
-                    fontSize: 14
+                    fontSize: 14,
+                    backgroundColor: isDarkTheme ? '#1f1f1f' : '#fff',
+                    color: isDarkTheme ? '#fff' : '#000'
                   }}
                 />
               </div>
@@ -420,7 +431,7 @@ export default function Task() {
 
       {/* Attachments */}
       <div style={{ marginBottom: 24 }}>
-        <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+        <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: isDarkTheme ? '#fff' : '#000' }}>
           Attachments
         </label>
         <label style={{
@@ -428,12 +439,13 @@ export default function Task() {
           alignItems: 'center',
           gap: 8,
           padding: '8px 16px',
-          background: '#fff',
-          border: '1px solid #d9d9d9',
+          background: isDarkTheme ? '#1f1f1f' : '#fff',
+          border: isDarkTheme ? 'none' : '1px solid #d9d9d9',
           borderRadius: 6,
           cursor: uploading ? 'not-allowed' : 'pointer',
           fontSize: 14,
-          opacity: uploading ? 0.6 : 1
+          opacity: uploading ? 0.6 : 1,
+          color: isDarkTheme ? '#fff' : '#000'
         }}>
           {uploading ? <Loader className="animate-spin" size={16} /> : <Paperclip size={16} />}
           {uploading ? 'Uploading...' : 'Add file'}
@@ -455,14 +467,14 @@ export default function Task() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '12px',
-                  border: '1px solid #d9d9d9',
+                  border: isDarkTheme ? 'none' : '1px solid #d9d9d9',
                   borderRadius: 6,
                   marginBottom: 8,
-                  backgroundColor: '#fafafa'
+                  backgroundColor: isDarkTheme ? '#1f1f1f' : '#fafafa'
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                  <div style={{ fontWeight: 600, marginBottom: 4, color: isDarkTheme ? '#fff' : '#000' }}>
                     {attachment.fileName}
                   </div>
                   <div style={{ fontSize: 12, color: '#888' }}>

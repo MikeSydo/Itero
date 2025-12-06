@@ -1,5 +1,5 @@
 import { KanbanBoard } from '@/components';
-import { useMatch, useOutletContext, useLocation, useNavigate, Outlet } from '@umijs/max';
+import { useMatch, useOutletContext, useLocation, useNavigate, Outlet, useModel } from '@umijs/max';
 import { Modal } from 'antd';
 
 interface BoardsContext {
@@ -15,6 +15,8 @@ export default function Board() {
   const onDelete = locationState?.onDelete || context?.onDeleteBoard;
   const navigate = useNavigate();
   const isCardOpen = location.pathname.includes('/c/');
+  const { initialState } = useModel('@@initialState');
+  const isDarkTheme = initialState?.settings?.navTheme === 'realDark';
   
   return (
     <div>
@@ -29,6 +31,21 @@ export default function Board() {
           onCancel={() => navigate(-1)}
           footer={null}
           width={500}
+          closeIcon={<span style={{ color: isDarkTheme ? '#fff' : '#000', fontSize: 20 }}>✕</span>}
+          styles={{
+            content: {
+              backgroundColor: isDarkTheme ? '#000' : '#fff',
+              padding: 0
+            },
+            header: {
+              backgroundColor: isDarkTheme ? '#000' : '#fff',
+              borderBottom: 'none'
+            },
+            body: {
+              backgroundColor: isDarkTheme ? '#000' : '#fff',
+              padding: 0
+            }
+          }}
         >
           <Outlet />
         </Modal>

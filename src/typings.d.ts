@@ -14,3 +14,11 @@ declare module 'omit.js';
 declare module 'numeral';
 declare module 'mockjs';
 declare module 'react-fittext';
+
+interface Window {
+  electronAPI?: {
+    minimizeWindow: () => void;
+    maximizeWindow: () => void;
+    closeWindow: () => void;
+  };
+}
