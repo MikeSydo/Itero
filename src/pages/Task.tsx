@@ -13,6 +13,7 @@ export default function Task() {
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [useStartDate, setUseStartDate] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -25,7 +26,10 @@ export default function Task() {
     if (task) {
       setTaskName(task.name);
       setDescription(task.description || '');
-      if (task.startedDate) setStartDate(task.startedDate.split('T')[0]);
+      if (task.startedDate) {
+        setStartDate(task.startedDate.split('T')[0]);
+        setUseStartDate(true);
+      }
       if (task.endDate) setEndDate(task.endDate.split('T')[0]);
     }
   }, [task]);
@@ -80,6 +84,9 @@ export default function Task() {
         body: JSON.stringify({ description: value }),
       });
       if (!response.ok) throw new Error('Failed to update description');
+      window.dispatchEvent(new CustomEvent('taskUpdated', { 
+        detail: { taskId, listId: task?.listId } 
+      }));
     } catch (error) {
       console.error(error);
     }
@@ -98,8 +105,47 @@ export default function Task() {
         }),
       });
       if (!response.ok) throw new Error('Failed to update dates');
+      window.dispatchEvent(new CustomEvent('taskUpdated', { 
+        detail: { taskId, listId: task?.listId } 
+      }));
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleStartDateChange = (newStartDate: string) => {
+    if (newStartDate && endDate && newStartDate > endDate) {
+      const nextDay = new Date(newStartDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const newEndDate = nextDay.toISOString().split('T')[0];
+      setStartDate(newStartDate);
+      setEndDate(newEndDate);
+      updateDates(newStartDate, newEndDate);
+    } else {
+      setStartDate(newStartDate);
+      updateDates(newStartDate, endDate);
+    }
+  };
+
+  const handleEndDateChange = (newEndDate: string) => {
+    if (useStartDate && startDate && newEndDate < startDate) {
+      const prevDay = new Date(newEndDate);
+      prevDay.setDate(prevDay.getDate() - 1);
+      const newStartDate = prevDay.toISOString().split('T')[0];
+      setStartDate(newStartDate);
+      setEndDate(newEndDate);
+      updateDates(newStartDate, newEndDate);
+    } else {
+      setEndDate(newEndDate);
+      updateDates(startDate, newEndDate);
+    }
+  };
+
+  const handleUseStartDateToggle = (checked: boolean) => {
+    setUseStartDate(checked);
+    if (!checked) {
+      setStartDate('');
+      updateDates('', endDate);
     }
   };
 
@@ -273,37 +319,15 @@ export default function Task() {
         </button>
         
         {showDatePicker && (
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontSize: 12, color: '#888' }}>
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  updateDates(e.target.value, endDate);
-                }}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #d9d9d9',
-                  borderRadius: 6,
-                  fontSize: 14
-                }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: 4, fontSize: 12, color: '#888' }}>
-                End Date
+                Due Date
               </label>
               <input
                 type="date"
                 value={endDate}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-                  updateDates(startDate, e.target.value);
-                }}
+                onChange={(e) => handleEndDateChange(e.target.value)}
                 style={{
                   padding: '8px 12px',
                   border: '1px solid #d9d9d9',
@@ -312,6 +336,37 @@ export default function Task() {
                 }}
               />
             </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                id="useStartDate"
+                checked={useStartDate}
+                onChange={(e) => handleUseStartDateToggle(e.target.checked)}
+                disabled={!endDate}
+                style={{ cursor: endDate ? 'pointer' : 'not-allowed', opacity: endDate ? 1 : 0.5 }}
+              />
+              <label htmlFor="useStartDate" style={{ fontSize: 14, cursor: endDate ? 'pointer' : 'not-allowed', opacity: endDate ? 1 : 0.5 }}>
+                Set start date (date range)
+              </label>
+            </div>
+            {useStartDate && (
+              <div>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: 12, color: '#888' }}>
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => handleStartDateChange(e.target.value)}
+                  style={{
+                    padding: '8px 12px',
+                    border: '1px solid #d9d9d9',
+                    borderRadius: 6,
+                    fontSize: 14
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

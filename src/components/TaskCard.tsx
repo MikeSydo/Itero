@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
-import { DeleteOutlined, CheckCircleFilled, CheckCircleOutlined } from '@ant-design/icons';
+import { DeleteOutlined, CheckCircleFilled, CheckCircleOutlined, FileTextOutlined, CalendarOutlined } from '@ant-design/icons';
 import type { Task } from 'types/index';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -98,16 +98,60 @@ export default function TaskCard({ task, onDelete }: TaskCardProps) {
     navigate(`/boards/${boardId}/c/${id}`);
   }
 
+  const hasDescription = task.description && task.description.trim().length > 0;
+  const hasDate = task.endDate || task.startedDate;
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${month}/${day}`;
+  };
+
+  const getDateDisplay = () => {
+    if (task.startedDate && task.endDate) {
+      return `${formatDate(task.startedDate)} - ${formatDate(task.endDate)}`;
+    } else if (task.endDate) {
+      return formatDate(task.endDate);
+    }
+    return '';
+  };
+
   return (
     <Card onClick={handleOpenTaskDetails}
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      title={<span style={{color:'white', textDecoration: isCompleted ? 'line-through' : 'none'}}>{task.name}</span>} 
+      title={
+        <span style={{
+          color:'white', 
+          textDecoration: isCompleted ? 'line-through' : 'none',
+          display: 'block',
+          whiteSpace: 'normal',
+          wordWrap: 'break-word',
+          paddingRight: '55px',
+          lineHeight: 1.3
+        }}>
+          {task.name}
+        </span>
+      } 
       variant='borderless'
       style={style}
-      styles={{header:{borderBottom: 0, background: 'black'}, body:{background:'black', color:'white', marginTop:-30}}}
+      styles={{header:{borderBottom: 0, background: 'black', minHeight: 'auto', paddingBottom: 8, padding: '12px 16px'}, body:{background:'black', color:'white', paddingTop: 0}}}
     >
+      {(hasDescription || hasDate) && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8 }}>
+          {hasDescription && (
+            <FileTextOutlined style={{ color: '#888', fontSize: 16 }} />
+          )}
+          {hasDate && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <CalendarOutlined style={{ color: '#888', fontSize: 16 }} />
+              <span style={{ color: '#888', fontSize: 12 }}>{getDateDisplay()}</span>
+            </div>
+          )}
+        </div>
+      )}
       <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
         <Button 
           style={{ position: 'absolute', top: 12, right: 10, color: 'white', background:'black', borderColor:'Black', fontSize: 30, paddingBottom: 15}}

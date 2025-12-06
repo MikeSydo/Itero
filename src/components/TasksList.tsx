@@ -148,7 +148,7 @@ export default function TasksList({ list, tasks, setTasks }: TasksListProps) {
       ref={setSortableRef}
       style={style}
     >
-      <Flex gap={120} style={{ paddingBottom: 5, padding: '10px 15px', ...dragHandleStyle }} {...attributes} {...listeners}>
+      <Flex gap={8} align="flex-start" style={{ paddingBottom: 5, padding: '10px 15px', ...dragHandleStyle, minHeight: 44 }} {...attributes} {...listeners}>
         {listNameEditor.isEditing ? (
           <Input
             value={listNameEditor.name}
@@ -156,12 +156,25 @@ export default function TasksList({ list, tasks, setTasks }: TasksListProps) {
             onKeyDown={listNameEditor.handleKeyPress}
             onBlur={listNameEditor.cancelEdit}
             autoFocus
-            style={{ margin: 0, minWidth: 50, width: 150 }}
+            style={{ margin: 0, minWidth: 50, flex: 1, maxWidth: 'calc(100% - 32px)' }}
             onPointerDown={(e) => e.stopPropagation()}
           />
         ) : (
           <div  
-            style={{ fontSize: 20, fontWeight: 600, color: 'white', flex: 1, userSelect: 'none'}}
+            style={{ 
+              fontSize: 20, 
+              fontWeight: 600, 
+              color: 'white', 
+              flex: 1, 
+              userSelect: 'none',
+              whiteSpace: 'normal',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              wordBreak: 'break-word',
+              lineHeight: 1.2,
+              paddingRight: 8,
+              minWidth: 0
+            }}
             onDoubleClick={(e) => {
               e.stopPropagation();
               listNameEditor.startEditing();
@@ -172,7 +185,7 @@ export default function TasksList({ list, tasks, setTasks }: TasksListProps) {
         )}
         <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
           <Button 
-            style={{ color: 'white', background:'transparent', border: 'none', fontSize: 24, padding: 0, height: 24, lineHeight: 1}}
+            style={{ color: 'white', background:'transparent', border: 'none', fontSize: 24, padding: 0, height: 24, lineHeight: 1, flexShrink: 0}}
             onMouseEnter={(e) => {e.currentTarget.style.background = '#8c7d0d'}}
             onMouseLeave={(e) => {e.currentTarget.style.background = 'transparent'}}
             onPointerDown={(e) => e.stopPropagation()}
