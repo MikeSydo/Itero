@@ -1,5 +1,3 @@
-// https://umijs.org/config/
-
 import { join } from 'node:path';
 import { defineConfig } from '@umijs/max';
 import defaultSettings from './defaultSettings';
@@ -33,15 +31,6 @@ export default defineConfig({
    * @description 设置 ie11 不一定完美兼容，需要检查自己使用的所有依赖
    * @doc https://umijs.org/docs/api/config#targets
    */
-  // targets: {
-  //   ie: 11,
-  // },
-  /**
-   * @name 路由的配置，不在路由中引入的文件不会编译
-   * @description 只支持 path，component，routes，redirect，wrappers，title 的配置
-   * @doc https://umijs.org/docs/guides/routes
-   */
-  // umi routes: https://umijs.org/docs/routing
   routes,
   /**
    * @name 主题的配置
@@ -49,7 +38,6 @@ export default defineConfig({
    * @doc antd的主题设置 https://ant.design/docs/react/customize-theme-cn
    * @doc umi 的 theme 配置 https://umijs.org/docs/api/config#theme
    */
-  // theme: { '@primary-color': '#1DA57A' }
   /**
    * @name moment 的国际化配置
    * @description 如果对国际化没有要求，打开之后能减少js的包大小

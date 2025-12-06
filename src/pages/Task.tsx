@@ -166,6 +166,9 @@ export default function Task() {
       });
       if (!response.ok) throw new Error('Failed to upload file');
       fetchAttachments();
+      window.dispatchEvent(new CustomEvent('taskUpdated', { 
+        detail: { taskId, listId: task?.listId } 
+      }));
     } catch (error) {
       console.error(error);
     } finally {
@@ -198,6 +201,9 @@ export default function Task() {
       });
       if (!response.ok) throw new Error('Failed to delete attachment');
       setAttachments(attachments.filter(a => a.id !== attachmentId));
+      window.dispatchEvent(new CustomEvent('taskUpdated', { 
+        detail: { taskId, listId: task?.listId } 
+      }));
     } catch (error) {
       console.error(error);
     }
@@ -295,7 +301,6 @@ export default function Task() {
         </h2>
       )}
 
-      {/* Description */}
       <div style={{ marginBottom: 24 }}>
         <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: isDarkTheme ? '#fff' : '#000' }}>
           Description
@@ -320,7 +325,6 @@ export default function Task() {
         />
       </div>
 
-      {/* Dates */}
       <div style={{ marginBottom: 24 }}>
         <button
           onClick={() => setShowDatePicker(!showDatePicker)}
@@ -446,7 +450,6 @@ export default function Task() {
         )}
       </div>
 
-      {/* Attachments */}
       <div style={{ marginBottom: 24 }}>
         <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: isDarkTheme ? '#fff' : '#000' }}>
           Attachments

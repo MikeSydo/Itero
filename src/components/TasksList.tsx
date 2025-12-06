@@ -50,6 +50,18 @@ export default function TasksList({ list, tasks, setTasks }: TasksListProps) {
 
   const initialTasksSet = useRef(false);
 
+  const refetchTasks = async () => {
+    try {
+      const response = await fetch(`${api}/lists/${list.id}/tasks`);
+      if (response.ok) {
+        const data = await response.json();
+        setTasks(data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     if (fetchedTasks && !initialTasksSet.current) {
       setTasks(fetchedTasks);
@@ -62,6 +74,19 @@ export default function TasksList({ list, tasks, setTasks }: TasksListProps) {
       setTasks(fetchedTasks);
     }
   }, [fetchedTasks?.length]);
+
+  useEffect(() => {
+    const handleTaskUpdated = (event: CustomEvent) => {
+      if (event.detail?.listId === list.id) {
+        refetchTasks();
+      }
+    };
+
+    window.addEventListener('taskUpdated', handleTaskUpdated as EventListener);
+    return () => {
+      window.removeEventListener('taskUpdated', handleTaskUpdated as EventListener);
+    };
+  }, [list.id]);
 
   const sortedTasks = [...tasks].sort((a, b) => {
     if (a.isCompleted === b.isCompleted) return 0;

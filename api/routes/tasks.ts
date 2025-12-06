@@ -7,7 +7,6 @@ import fs from 'fs';
 const router = Router();
 const prisma = new PrismaClient();
 
-// Налаштування для завантаження файлів
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     const uploadDir = path.join(process.cwd(), 'uploads');
@@ -25,7 +24,7 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 10 * 1024 * 1024,
   }
 });
 
@@ -49,7 +48,6 @@ router.get('/:id', async (req, res) => {
   return res.json(task);
 });
 
-// Отримати всі вкладення таска
 router.get('/:id/attachments', async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) {
@@ -68,7 +66,6 @@ router.get('/:id/attachments', async (req, res) => {
   }
 });
 
-// Завантажити файл
 router.post('/:id/attachments', upload.single('file'), async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) {
@@ -80,15 +77,12 @@ router.post('/:id/attachments', upload.single('file'), async (req, res) => {
   }
 
   try {
-    // Перевірити чи існує таск
     const task = await prisma.task.findUnique({ where: { id } });
     if (!task) {
-      // Видалити завантажений файл якщо таск не знайдено
       fs.unlinkSync(req.file.path);
       return res.status(404).json({ error: 'Task not found' });
     }
 
-    // Декодуємо назву файлу з UTF-8 (multer передає її в latin1)
     const fileName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
 
     const attachment = await prisma.attachment.create({
@@ -104,7 +98,6 @@ router.post('/:id/attachments', upload.single('file'), async (req, res) => {
     return res.status(201).json(attachment);
   } catch (error) {
     console.error('Error creating attachment:', error);
-    // Видалити файл у разі помилки
     if (req.file) {
       fs.unlinkSync(req.file.path);
     }
@@ -112,7 +105,6 @@ router.post('/:id/attachments', upload.single('file'), async (req, res) => {
   }
 });
 
-// Видалити вкладення
 router.delete('/attachments/:attachmentId', async (req, res) => {
   const attachmentId = Number(req.params.attachmentId);
   if (!Number.isFinite(attachmentId)) {
@@ -128,13 +120,11 @@ router.delete('/attachments/:attachmentId', async (req, res) => {
       return res.status(404).json({ error: 'Attachment not found' });
     }
 
-    // Видалити файл з файлової системи
     const filePath = path.join(process.cwd(), attachment.fileUrl);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 
-    // Видалити запис з бази даних
     await prisma.attachment.delete({
       where: { id: attachmentId }
     });
@@ -172,12 +162,10 @@ router.delete('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid task id' });
     }
 
-    // Отримати всі вкладення перед видаленням
     const attachments = await prisma.attachment.findMany({
       where: { taskId: id }
     });
 
-    // Видалити файли з файлової системи
     for (const attachment of attachments) {
       const filePath = path.join(process.cwd(), attachment.fileUrl);
       if (fs.existsSync(filePath)) {
@@ -185,7 +173,6 @@ router.delete('/:id', async (req, res) => {
       }
     }
 
-    // Видалити таск (вкладення видаляться автоматично через onDelete: Cascade)
     await prisma.task.delete({
       where: { id },
     });
@@ -205,12 +192,10 @@ router.patch('/:id', async (req, res) => {
   try {
     const updateData: any = {};
     
-    // Оновлення опису
     if (req.body.description !== undefined) {
       updateData.description = req.body.description;
     }
     
-    // Оновлення дат
     if (req.body.startedDate !== undefined) {
       updateData.startedDate = req.body.startedDate ? new Date(req.body.startedDate) : null;
     }
@@ -218,7 +203,6 @@ router.patch('/:id', async (req, res) => {
       updateData.endDate = req.body.endDate ? new Date(req.body.endDate) : null;
     }
     
-    // Оновлення інших полів
     if (req.body.name !== undefined) {
       updateData.name = req.body.name;
     }

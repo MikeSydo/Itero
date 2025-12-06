@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
-import { DeleteOutlined, CheckCircleFilled, CheckCircleOutlined, FileTextOutlined, CalendarOutlined } from '@ant-design/icons';
+import { DeleteOutlined, CheckCircleFilled, CheckCircleOutlined, FileTextOutlined, CalendarOutlined, PaperClipOutlined } from '@ant-design/icons';
 import type { Task } from 'types/index';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -91,6 +91,8 @@ export default function TaskCard({ task, onDelete }: TaskCardProps) {
 
   const hasDescription = task.description && task.description.trim().length > 0;
   const hasDate = task.endDate || task.startedDate;
+  const attachmentsCount = task.attachments?.length || 0;
+  const hasAttachments = attachmentsCount > 0;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -167,12 +169,18 @@ export default function TaskCard({ task, onDelete }: TaskCardProps) {
       } 
       variant='borderless'
       style={style}
-      styles={{header:{borderBottom: 0, background: 'black', minHeight: 'auto', paddingBottom: 8, padding: '12px 16px'}, body:{background:'black', color:'white', paddingTop: 0}}}
+      styles={{header:{borderBottom: 0, background: 'black', minHeight: 'auto', paddingBottom: 8, padding: '12px 16px'}, body:{background:'black', color:'white', paddingTop: 5}}}
     >
-      {(hasDescription || hasDate) && (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8, flexWrap: 'wrap' }}>
+      {(hasDescription || hasDate || hasAttachments) && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8, flexWrap: 'wrap', marginTop: 10 }}>
           {hasDescription && (
             <FileTextOutlined style={{ color: '#888', fontSize: 16 }} />
+          )}
+          {hasAttachments && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <PaperClipOutlined style={{ color: '#888', fontSize: 16 }} />
+              <span style={{ color: '#888', fontSize: 12 }}>{attachmentsCount}</span>
+            </div>
           )}
           {hasDate && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

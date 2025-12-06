@@ -6,6 +6,7 @@ export type Task = {
   isCompleted?: boolean;
   startedDate?: string;
   endDate?: string;
+  attachments?: Attachment[];
 };
 
 export type TasksList = {

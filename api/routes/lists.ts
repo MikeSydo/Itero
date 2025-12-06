@@ -29,6 +29,7 @@ router.get('/:id/tasks', async (req, res) => {
   const tasks = await prisma.task.findMany({ 
     where: { listId: id },
     orderBy: { position: 'asc' },
+    include: { attachments: true },
   });
   return res.json(tasks);
 });
