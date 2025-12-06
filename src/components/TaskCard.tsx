@@ -83,15 +83,6 @@ export default function TaskCard({ task, onDelete }: TaskCardProps) {
     },
   ];
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    background: isCompleted ? '#1a1a1a' : 'black',
-    marginBottom: 10,
-    cursor: 'grab',
-    opacity: isDragging ? 0.5 : (isCompleted ? 0.6 : 1),
-  };
-
   const navigate = useNavigate();
 
   const handleOpenTaskDetails = async () => {
@@ -105,7 +96,46 @@ export default function TaskCard({ task, onDelete }: TaskCardProps) {
     const date = new Date(dateString);
     const month = date.getMonth() + 1;
     const day = date.getDate();
-    return `${month}/${day}`;
+    return `${day}/${month}`;
+  };
+
+  const isToday = (dateString: string) => {
+    const today = new Date();
+    const date = new Date(dateString);
+    return today.getFullYear() === date.getFullYear() &&
+           today.getMonth() === date.getMonth() &&
+           today.getDate() === date.getDate();
+  };
+
+  const isPastDate = (dateString: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const date = new Date(dateString);
+    date.setHours(0, 0, 0, 0);
+    return date < today;
+  };
+
+  const getDateStatus = () => {
+    if (task.endDate) {
+      if (isPastDate(task.endDate)) {
+        return { text: 'Overdue', color: '#ff4d4f' };
+      } else if (isToday(task.endDate)) {
+        return { text: 'Soon', color: '#faad14' };
+      }
+    }
+    return null;
+  };
+
+  const dateStatus = getDateStatus();
+  const isOverdue = dateStatus?.text === 'Overdue';
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    background: isOverdue && !isCompleted ? '#5c1c1c' : (isCompleted ? '#1a1a1a' : 'black'),
+    marginBottom: 10,
+    cursor: 'grab',
+    opacity: isDragging ? 0.5 : (isCompleted ? 0.6 : 1),
   };
 
   const getDateDisplay = () => {
@@ -140,14 +170,26 @@ export default function TaskCard({ task, onDelete }: TaskCardProps) {
       styles={{header:{borderBottom: 0, background: 'black', minHeight: 'auto', paddingBottom: 8, padding: '12px 16px'}, body:{background:'black', color:'white', paddingTop: 0}}}
     >
       {(hasDescription || hasDate) && (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8, flexWrap: 'wrap' }}>
           {hasDescription && (
             <FileTextOutlined style={{ color: '#888', fontSize: 16 }} />
           )}
           {hasDate && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <CalendarOutlined style={{ color: '#888', fontSize: 16 }} />
               <span style={{ color: '#888', fontSize: 12 }}>{getDateDisplay()}</span>
+              {dateStatus && (
+                <span style={{ 
+                  backgroundColor: dateStatus.color, 
+                  color: 'white', 
+                  padding: '2px 8px', 
+                  borderRadius: 4, 
+                  fontSize: 11,
+                  fontWeight: 500
+                }}>
+                  {dateStatus.text}
+                </span>
+              )}
             </div>
           )}
         </div>

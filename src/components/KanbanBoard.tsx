@@ -4,6 +4,7 @@ import { TasksList } from "./";
 import { Flex, Button, Input, Space, MenuProps, Dropdown } from 'antd'
 import { useState, useEffect } from "react";
 import { DndContext, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent, DragOverEvent, closestCorners } from '@dnd-kit/core';
+import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { useModel, useNavigate, useIntl } from "@umijs/max";
 import { ProLayout } from '@ant-design/pro-layout';
@@ -375,9 +376,9 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
             </Button>
           </Flex>
         )}>
-        <div style={{ background: '#2a3245', minHeight: 'calc(100vh - 64px)', border: 'none' }}>
+        <div style={{ background: '#2a3245', minHeight: 'calc(100vh - 64px)', border: 'none', display: 'flex', flexDirection: 'column' }}>
           <Flex justify="space-between" align="center" style={{ padding: '16px 24px', background: 'rgba(0, 0, 0, 0.2)', 
-            backdropFilter: 'blur(10px)', position: 'sticky', top: 0, zIndex: 10 }}>
+            backdropFilter: 'blur(10px)', flexShrink: 0, position: 'sticky', top: 0, zIndex: 10 }}>
             {boardNameEditor.isEditing ? (
               <Input
                 value={boardNameEditor.name}
@@ -401,7 +402,8 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
               </Dropdown>  
             </Space>
           </Flex>
-          <Flex style={{ overflowX: 'auto', padding: 20, paddingTop: 40, height: '100%' }} gap={20} align="start">
+          <div style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1 }}>
+            <Flex style={{ padding: 20, paddingTop: 40, height: '100%', minWidth: 'fit-content' }} gap={20} align="start">
             {error && <div style={{ color: 'salmon' }}>{error}</div>}
             {loading && <div style={{ color: 'Black' }}>Loading…</div>}
             <DndContext 
@@ -422,7 +424,7 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
               </SortableContext>
             </DndContext>
             {isCreating ? (
-                    <div style={{ marginLeft: 20, marginBottom: 5, width: 300 }}>
+                    <div style={{ marginLeft: 20, marginBottom: 5, width: 300, minWidth: 300, flexShrink: 0 }}>
                     <Input
                         placeholder="Enter list name..."
                         value={listName}
@@ -446,7 +448,7 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
                     </div>
                 ) : (
                     <Button 
-                      style = {{height: 60, fontSize: 25, opacity: 0.7, background: '#686d78', borderColor:'#3d3d3d', color: 'white', marginLeft:20, marginBottom:5, padding:10, width: 300, display: 'flex', justifyContent: 'flex-start'}}
+                      style = {{height: 60, fontSize: 25, opacity: 0.7, background: '#686d78', borderColor:'#3d3d3d', color: 'white', marginLeft:20, marginBottom:5, padding:10, width: 300, minWidth: 300, flexShrink: 0, display: 'flex', justifyContent: 'flex-start'}}
                       onMouseEnter={(e) => e.currentTarget.style.background = '#8c7d0d'}
                       onMouseLeave={(e) => e.currentTarget.style.background = '#3d3d3d'}
                       onClick={() => setIsCreating(true)}
@@ -455,7 +457,8 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
                     </Button>
                 )
             }
-          </Flex>
+            </Flex>
+          </div>
         </div>
       </ProLayout>
     </>

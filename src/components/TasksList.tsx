@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { List, Button, Input, Space, Dropdown, Flex } from 'antd';
 import type { MenuProps } from 'antd';
 import { TaskCard } from './';
@@ -7,6 +7,7 @@ import { useFetch, useEditableName } from '../hooks';
 import { DeleteOutlined } from '@ant-design/icons'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
+import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { CSS } from '@dnd-kit/utilities';
 
 interface TasksListProps {
@@ -23,7 +24,9 @@ export default function TasksList({ list, tasks, setTasks }: TasksListProps) {
   const [creating, setCreating] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
   
-  const { attributes, listeners, setNodeRef: setSortableRef, transform, transition, isDragging } = useSortable({ id: list.id });
+  const { attributes, listeners, setNodeRef: setSortableRef, transform, transition, isDragging } = useSortable({ 
+    id: list.id,
+  });
   const { setNodeRef: setDroppableRef } = useDroppable({ id: list.id });
 
   const loading = loadingList || loadingTasks;
@@ -45,11 +48,20 @@ export default function TasksList({ list, tasks, setTasks }: TasksListProps) {
     },
   });
 
+  const initialTasksSet = useRef(false);
+
   useEffect(() => {
-    if (fetchedTasks && tasks.length === 0) {
+    if (fetchedTasks && !initialTasksSet.current) {
       setTasks(fetchedTasks);
+      initialTasksSet.current = true;
     }
   }, [fetchedTasks]);
+
+  useEffect(() => {
+    if (fetchedTasks && initialTasksSet.current && fetchedTasks.length !== tasks.length) {
+      setTasks(fetchedTasks);
+    }
+  }, [fetchedTasks?.length]);
 
   const sortedTasks = [...tasks].sort((a, b) => {
     if (a.isCompleted === b.isCompleted) return 0;
@@ -128,13 +140,20 @@ export default function TasksList({ list, tasks, setTasks }: TasksListProps) {
     },
   ];
 
+  const adjustedTransform = transform ? {
+    ...transform,
+    y: 0,
+  } : transform;
+
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Transform.toString(adjustedTransform),
     transition,
     background: '#3d3d3d',
     width: 300,
+    minWidth: 300,
+    flexShrink: 0,
     borderRadius: 8,
-    opacity: isDragging ? 0.4 : 1,
+    opacity: isDragging ? 0.6 : 1,
     rotate: isDragging ? '3deg' : '0deg',
     boxShadow: isDragging ? '0 10px 30px rgba(0,0,0,0.5)' : 'none',
   };

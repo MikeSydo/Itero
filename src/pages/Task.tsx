@@ -324,17 +324,64 @@ export default function Task() {
               <label style={{ display: 'block', marginBottom: 4, fontSize: 12, color: '#888' }}>
                 Due Date
               </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => handleEndDateChange(e.target.value)}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #d9d9d9',
-                  borderRadius: 6,
-                  fontSize: 14
-                }}
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => handleEndDateChange(e.target.value)}
+                  style={{
+                    padding: '8px 12px',
+                    border: '1px solid #d9d9d9',
+                    borderRadius: 6,
+                    fontSize: 14
+                  }}
+                />
+                {endDate && (() => {
+                  const isToday = (dateString: string) => {
+                    const today = new Date();
+                    const date = new Date(dateString);
+                    return today.getFullYear() === date.getFullYear() &&
+                           today.getMonth() === date.getMonth() &&
+                           today.getDate() === date.getDate();
+                  };
+                  const isPastDate = (dateString: string) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const date = new Date(dateString);
+                    date.setHours(0, 0, 0, 0);
+                    return date < today;
+                  };
+                  const dateValue = endDate + 'T00:00:00';
+                  if (isPastDate(dateValue)) {
+                    return (
+                      <span style={{
+                        backgroundColor: '#ff4d4f',
+                        color: 'white',
+                        padding: '4px 12px',
+                        borderRadius: 6,
+                        fontSize: 12,
+                        fontWeight: 500
+                      }}>
+                        Overdue
+                      </span>
+                    );
+                  } else if (isToday(dateValue)) {
+                    return (
+                      <span style={{
+                        backgroundColor: '#faad14',
+                        color: 'white',
+                        padding: '4px 12px',
+                        borderRadius: 6,
+                        fontSize: 12,
+                        fontWeight: 500
+                      }}>
+                        Soon
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
