@@ -98,8 +98,7 @@ export default defineConfig({
   locale: {
     default: 'en-US',
     antd: true,
-    // default true, when it is true, will use `navigator.language` overwrite default
-    baseNavigator: true,
+    baseNavigator: false,
   },
   /**
    * @name antd 插件

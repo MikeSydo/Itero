@@ -24,6 +24,7 @@ model Task {
   position Int @default(0)
   name   String
   description String?
+  isCompleted Boolean @default(false)
   startedDate DateTime?
   endDate DateTime?
   attachments     Attachment[]

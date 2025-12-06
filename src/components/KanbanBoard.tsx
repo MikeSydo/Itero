@@ -5,7 +5,7 @@ import { Flex, Button, Input, Space, MenuProps, Dropdown } from 'antd'
 import { useState, useEffect } from "react";
 import { DndContext, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent, DragOverEvent, closestCorners } from '@dnd-kit/core';
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
-import { useModel, useNavigate } from "@umijs/max";
+import { useModel, useNavigate, useIntl } from "@umijs/max";
 import { ProLayout } from '@ant-design/pro-layout';
 import { DeleteOutlined, StarOutlined, StarFilled } from "@ant-design/icons";
 
@@ -244,7 +244,7 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               listId: overListId,
-              position: index 
+              position: index
             }),
           })
         )
@@ -257,10 +257,29 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
             fetch(`${api}/tasks/${task.id}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ position: index }),
+              body: JSON.stringify({ 
+                position: index
+              }),
             })
           )
         );
+        
+        const [sourceTasksResponse, targetTasksResponse] = await Promise.all([
+          fetch(`${api}/lists/${activeListId}/tasks`).then(res => res.json()),
+          fetch(`${api}/lists/${overListId}/tasks`).then(res => res.json())
+        ]);
+        
+        setAllTasks(prev => ({
+          ...prev,
+          [activeListId]: sourceTasksResponse,
+          [overListId]: targetTasksResponse
+        }));
+      } else {
+        const tasksResponse = await fetch(`${api}/lists/${activeListId}/tasks`).then(res => res.json());
+        setAllTasks(prev => ({
+          ...prev,
+          [activeListId]: tasksResponse
+        }));
       }
     } catch (err) {
       console.error('Failed to update task:', err);
@@ -314,16 +333,20 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
     }
   };
 
+  const intl = useIntl();
+
   const menuItems: MenuProps['items'] = [
     {
       key: 'favorite',
-      label: isFavorite ? 'Видалити з улюблених' : 'Додати до улюблених',
+      label: isFavorite 
+        ? intl.formatMessage({ id: 'pages.board.favorite.remove' })
+        : intl.formatMessage({ id: 'pages.board.favorite.add' }),
       icon: isFavorite ? <StarFilled /> : <StarOutlined />,
       onClick: handleToggleFavorite,
     },
     {
       key: 'delete',
-      label: 'Delete',
+      label: intl.formatMessage({ id: 'pages.common.delete' }),
       icon: <DeleteOutlined/>,
       danger: true,
       onClick: handleDelete,
@@ -391,7 +414,7 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
                 {!loading && !error && displayLists && displayLists.map(list => (
                   <TasksList 
                     key={list.id} 
-                    id={list.id} 
+                    list={list}
                     tasks={allTasks[list.id] || []}
                     setTasks={(tasks) => setAllTasks(prev => ({ ...prev, [list.id]: tasks }))}
                   />

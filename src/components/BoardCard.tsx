@@ -6,13 +6,16 @@ import { StarOutlined, StarFilled } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
 
 interface BoardCardProps {
-  id: number;
+  board?: KanbanBoardType;
+  boardId?: number;
   onDelete?: (id: number) => void;
   onFavoriteChange?: () => void;
 }
 
-export default function BoardCard({id, onDelete, onFavoriteChange}: BoardCardProps){
-    const {data, loading, error} = useFetch<KanbanBoardType>(`/boards/${id}`);
+export default function BoardCard({board: propBoard, boardId, onDelete, onFavoriteChange}: BoardCardProps){
+    const shouldFetch = !propBoard && boardId !== undefined;
+    const {data: fetchedBoard, loading, error} = useFetch<KanbanBoardType>(shouldFetch ? `/boards/${boardId}` : '');
+    const board = propBoard || fetchedBoard;
     const navigate = useNavigate();
     const [isFavorite, setIsFavorite] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
@@ -20,21 +23,23 @@ export default function BoardCard({id, onDelete, onFavoriteChange}: BoardCardPro
     const api = `http://localhost:${process.env.PORT || 3000}`;
 
     useEffect(() => {
-        if (data) {
-            setIsFavorite(data.isFavorite || false);
+        if (board) {
+            setIsFavorite(board.isFavorite || false);
         }
-    }, [data]);
+    }, [board]);
 
     const MoveToBoard = () => {
-        navigate(`/boards/${id}`, { state: { onDelete } });
+        if (!board) return;
+        navigate(`/boards/${board.id}`, { state: { onDelete } });
     }
 
     const toggleFavorite = async (e: React.MouseEvent) => {
         e.stopPropagation();
+        if (!board) return;
         const newFavoriteState = !isFavorite;
         
         try {
-            const response = await fetch(`${api}/boards/${id}/favorite`, {
+            const response = await fetch(`${api}/boards/${board.id}/favorite`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -65,7 +70,7 @@ export default function BoardCard({id, onDelete, onFavoriteChange}: BoardCardPro
             >
                 {loading && <div>Loading…</div>}
                 {error && <div style={{ color: 'salmon' }}>{error}</div>}
-                {!loading && !error && data && (<div>{data.name}</div>)}
+                {!loading && !error && board && (<div>{board.name}</div>)}
             </Card>
             {(isHovered || isFavorite) && (
                 <div

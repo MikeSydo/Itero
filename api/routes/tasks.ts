@@ -225,6 +225,9 @@ router.patch('/:id', async (req, res) => {
     if (req.body.listId !== undefined) {
       updateData.listId = req.body.listId;
     }
+    if (req.body.isCompleted !== undefined) {
+      updateData.isCompleted = req.body.isCompleted;
+    }
     if (req.body.repeatInterval !== undefined) {
       updateData.repeatInterval = req.body.repeatInterval;
     }

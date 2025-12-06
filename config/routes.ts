@@ -13,7 +13,7 @@
 export default [
   {
     path: '/',
-    name: 'Home',
+    name: 'Favorites',
     component: './Home',
   },
   {

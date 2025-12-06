@@ -72,7 +72,7 @@ export default function Boards() {
     <>
       <Outlet context={{ onDeleteBoard: handleDeleteBoard }} />
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-start' }}>
-        {boardsId.map(id => <BoardCard key={id} id={id} onDelete={handleDeleteBoard} />)}
+        {boardsId.map(id => <BoardCard key={id} boardId={id} onDelete={handleDeleteBoard} />)}
         {isCreating ? (
           <Card style={{ width: 350, height: 150, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <Input

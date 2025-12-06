@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import { DeleteOutlined, CheckCircleFilled, CheckCircleOutlined } from '@ant-design/icons';
 import type { Task } from 'types/index';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -13,7 +13,7 @@ interface TaskCardProps {
 }
 
 export default function TaskCard({ task, onDelete }: TaskCardProps) {
-  const { id } = task; 
+  const { id, isCompleted } = task; 
   const [isDeleted, setIsDeleted] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const { boardId } = useParams<{ boardId: string }>();
@@ -35,11 +35,42 @@ export default function TaskCard({ task, onDelete }: TaskCardProps) {
     }
   };
 
+  const handleToggleComplete = async () => {
+    try {
+      const response = await fetch(`${api}/tasks/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isCompleted: !isCompleted }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update task');
+      
+      window.dispatchEvent(new CustomEvent('taskUpdated', { 
+        detail: { taskId: id, listId: task.listId } 
+      }));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (isDeleted) {
     return null;
   }
 
   const menuItems: MenuProps['items'] = [
+    {
+      key: 'complete',
+      label: isCompleted ? 'Mark as incomplete' : 'Mark as complete',
+      icon: isCompleted 
+        ? <CheckCircleFilled style={{ color: '#52c41a' }} /> 
+        : <CheckCircleOutlined />,
+      onClick: (info) => {
+        info.domEvent.stopPropagation(); 
+        handleToggleComplete();
+      },
+    },
     {
       key: 'delete',
       label: 'Delete',
@@ -55,10 +86,10 @@ export default function TaskCard({ task, onDelete }: TaskCardProps) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    background: 'black',
+    background: isCompleted ? '#1a1a1a' : 'black',
     marginBottom: 10,
     cursor: 'grab',
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.5 : (isCompleted ? 0.6 : 1),
   };
 
   const navigate = useNavigate();
@@ -72,7 +103,7 @@ export default function TaskCard({ task, onDelete }: TaskCardProps) {
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      title={<span style={{color:'white'}}>{task.name}</span>} 
+      title={<span style={{color:'white', textDecoration: isCompleted ? 'line-through' : 'none'}}>{task.name}</span>} 
       variant='borderless'
       style={style}
       styles={{header:{borderBottom: 0, background: 'black'}, body:{background:'black', color:'white', marginTop:-30}}}

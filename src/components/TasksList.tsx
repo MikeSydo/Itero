@@ -10,21 +10,21 @@ import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
 interface TasksListProps {
-  id: number;
+  list: TasksListType;
   tasks: Task[];
   setTasks: (tasks: Task[]) => void;
 }
 
-export default function TasksList({ id, tasks, setTasks }: TasksListProps) {
-  const { data: list, loading: loadingList, error: errorList } = useFetch<TasksListType>(`/lists/${id}`);
-  const { data: fetchedTasks, loading: loadingTasks, error: errorTasks } = useFetch<Task[]>(`/lists/${id}/tasks`);
+export default function TasksList({ list, tasks, setTasks }: TasksListProps) {
+  const { loading: loadingList, error: errorList } = useFetch<TasksListType>(`/lists/${list.id}`);
+  const { data: fetchedTasks, loading: loadingTasks, error: errorTasks } = useFetch<Task[]>(`/lists/${list.id}/tasks`);
   const [isCreating, setIsCreating] = useState(false);
   const [taskName, setTaskName] = useState('');
   const [creating, setCreating] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
   
-  const { attributes, listeners, setNodeRef: setSortableRef, transform, transition, isDragging } = useSortable({ id });
-  const { setNodeRef: setDroppableRef } = useDroppable({ id });
+  const { attributes, listeners, setNodeRef: setSortableRef, transform, transition, isDragging } = useSortable({ id: list.id });
+  const { setNodeRef: setDroppableRef } = useDroppable({ id: list.id });
 
   const loading = loadingList || loadingTasks;
   const error = errorList || errorTasks;
@@ -32,9 +32,9 @@ export default function TasksList({ id, tasks, setTasks }: TasksListProps) {
   const api =  `http://localhost:${process.env.PORT || 3000}`;
 
   const listNameEditor = useEditableName({
-    initialName: list?.name || '',
+    initialName: list.name,
     onUpdate: async (newName) => {
-      const response = await fetch(`${api}/lists/${id}`, {
+      const response = await fetch(`${api}/lists/${list.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -51,6 +51,11 @@ export default function TasksList({ id, tasks, setTasks }: TasksListProps) {
     }
   }, [fetchedTasks]);
 
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (a.isCompleted === b.isCompleted) return 0;
+    return a.isCompleted ? 1 : -1;
+  });
+
   const handleCreateTask = async () => {
     if (!taskName.trim()) {
       return;
@@ -65,7 +70,7 @@ export default function TasksList({ id, tasks, setTasks }: TasksListProps) {
         },
         body: JSON.stringify({
           name: taskName,
-          listId: id,
+          listId: list.id,
         }),
       });
 
@@ -97,7 +102,7 @@ export default function TasksList({ id, tasks, setTasks }: TasksListProps) {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`${api}/lists/${id}`, {
+      const response = await fetch(`${api}/lists/${list.id}`, {
         method: 'DELETE',
       });
 
@@ -187,8 +192,8 @@ export default function TasksList({ id, tasks, setTasks }: TasksListProps) {
         {...listeners}
       >
         <List style={{ margin: '0 10px', marginBottom: 5, padding: 0, minHeight: 50 }}>
-          <SortableContext items={tasks} strategy={verticalListSortingStrategy}>
-            {!loading && !error && tasks && tasks.map(card => (
+          <SortableContext items={sortedTasks} strategy={verticalListSortingStrategy}>
+            {!loading && !error && sortedTasks && sortedTasks.map(card => (
               <TaskCard key={card.id} task={card} onDelete={() => setTasks(tasks.filter(t => t.id !== card.id))} />
             ))}
           </SortableContext>

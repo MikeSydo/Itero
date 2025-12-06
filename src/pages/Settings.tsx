@@ -35,12 +35,12 @@ export default function Settings() {
         <>
             <Outlet/>
             <Space direction="horizontal">
-                <Card title="Налаштування інтерфейсу" style={{ maxWidth: 600 }}>
+                <Card title="Interface Settings" style={{ maxWidth: 600 }}>
                     <Space direction="vertical" size="large" style={{ width: '100%' }}>
                         <Space style={{ width: '100%', justifyContent: 'space-between' }}>
                             <div>
-                                <Title level={5} style={{ margin: 0 }}>Темна тема</Title>
-                                <Text type="secondary">Перемкнути між світлою та темною темою</Text>
+                                <Title level={5} style={{ margin: 0 }}>Dark Theme</Title>
+                                <Text type="secondary">Switch between light and dark theme</Text>
                             </div>
                             <Switch 
                                 checked={isDarkTheme}
@@ -50,8 +50,8 @@ export default function Settings() {
 
                         <Space style={{ width: '100%', justifyContent: 'space-between' }}>
                             <div>
-                                <Title level={5} style={{ margin: 0 }}>Основний колір</Title>
-                                <Text type="secondary">Виберіть колір теми</Text>
+                                <Title level={5} style={{ margin: 0 }}>Primary Color</Title>
+                                <Text type="secondary">Choose your theme color</Text>
                             </div>
                             <ColorPicker 
                                 value={primaryColor}
@@ -60,9 +60,6 @@ export default function Settings() {
                             />
                         </Space>
                     </Space>
-                </Card>
-                <Card title="Змінити мову" style={{ width: 400, height:220 }}>
-                
                 </Card>
             </Space>
         </>

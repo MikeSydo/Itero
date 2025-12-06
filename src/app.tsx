@@ -1,5 +1,6 @@
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { ConfigProvider, theme } from 'antd';
+import enUS from 'antd/locale/en_US';
 import defaultSettings from '../config/defaultSettings';
 import '@ant-design/v5-patch-for-react-19';
 
@@ -24,6 +25,7 @@ export const layout = ({ initialState }: any) => {
       
       return (
         <ConfigProvider
+          locale={enUS}
           theme={{
             cssVar: true,
             algorithm: isDarkTheme ? theme.darkAlgorithm : theme.defaultAlgorithm,

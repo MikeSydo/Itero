@@ -2,24 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from '@umijs/max';
 import { Calendar, Paperclip, Trash2, Download, Loader } from 'lucide-react';
 import { useFetch } from '@/hooks';
-
-interface Task {
-  id: number;
-  name: string;
-  description?: string;
-  startedDate?: string;
-  endDate?: string;
-  listId: number;
-}
-
-interface Attachment {
-  id: number;
-  fileName: string;
-  fileUrl: string;
-  fileSize: number;
-  mimeType: string;
-  uploadedAt: string;
-}
+import type { Task, Attachment } from 'types/index';
 
 export default function Task() {
   const { cardId } = useParams<{ cardId: string }>();
@@ -183,7 +166,7 @@ export default function Task() {
   if (!taskId) {
     return (
       <div style={{ padding: 20, textAlign: 'center', color: '#ff4d4f' }}>
-        Помилка: ID таска не знайдено
+        Error: Task ID not found
       </div>
     );
   }
@@ -191,7 +174,7 @@ export default function Task() {
   if (errorTask || !task) {
     return (
       <div style={{ padding: 20, textAlign: 'center', color: '#ff4d4f' }}>
-        {errorTask || 'Таск не знайдено'}
+        {errorTask || 'Task not found'}
       </div>
     );
   }
@@ -221,7 +204,9 @@ export default function Task() {
             padding: '8px 12px',
             border: '2px solid #1890ff',
             borderRadius: 6,
-            outline: 'none'
+            outline: 'none',
+            color: '#000',
+            backgroundColor: '#fff'
           }}
         />
       ) : (
@@ -243,10 +228,10 @@ export default function Task() {
         </h2>
       )}
 
-      {/* Опис */}
+      {/* Description */}
       <div style={{ marginBottom: 24 }}>
         <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-          Опис
+          Description
         </label>
         <textarea
           value={description}
@@ -266,7 +251,7 @@ export default function Task() {
         />
       </div>
 
-      {/* Дати */}
+      {/* Dates */}
       <div style={{ marginBottom: 24 }}>
         <button
           onClick={() => setShowDatePicker(!showDatePicker)}
@@ -284,14 +269,14 @@ export default function Task() {
           }}
         >
           <Calendar size={16} />
-          Дати
+          Dates
         </button>
         
         {showDatePicker && (
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontSize: 12, color: '#888' }}>
-                Дата початку
+                Start Date
               </label>
               <input
                 type="date"
@@ -310,7 +295,7 @@ export default function Task() {
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontSize: 12, color: '#888' }}>
-                Кінцева дата
+                End Date
               </label>
               <input
                 type="date"
@@ -331,10 +316,10 @@ export default function Task() {
         )}
       </div>
 
-      {/* Файли */}
+      {/* Attachments */}
       <div style={{ marginBottom: 24 }}>
         <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-          Вкладення
+          Attachments
         </label>
         <label style={{
           display: 'inline-flex',
@@ -349,7 +334,7 @@ export default function Task() {
           opacity: uploading ? 0.6 : 1
         }}>
           {uploading ? <Loader className="animate-spin" size={16} /> : <Paperclip size={16} />}
-          {uploading ? 'Завантаження...' : 'Додати файл'}
+          {uploading ? 'Uploading...' : 'Add file'}
           <input
             type="file"
             onChange={handleUpload}
@@ -392,7 +377,7 @@ export default function Task() {
                       cursor: 'pointer',
                       color: '#1890ff'
                     }}
-                    title="Завантажити"
+                    title="Download"
                   >
                     <Download size={18} />
                   </button>
@@ -405,7 +390,7 @@ export default function Task() {
                       cursor: 'pointer',
                       color: '#ff4d4f'
                     }}
-                    title="Видалити"
+                    title="Delete"
                   >
                     <Trash2 size={18} />
                   </button>

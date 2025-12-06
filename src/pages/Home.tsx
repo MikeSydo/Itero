@@ -38,9 +38,9 @@ const Home: React.FC = () => {
   };
 
   return (
-    <PageContainer title="Home">
+    <PageContainer title="Favorites">
       <div style={{ padding: '20px' }}>
-        <Title level={3}>Улюблені дошки</Title>
+        <Title level={3}>Favorite Boards</Title>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>
             <Spin size="large" />
@@ -53,12 +53,12 @@ const Home: React.FC = () => {
             marginTop: '20px' 
           }}>
             {favoriteBoards.map(id => (
-              <BoardCard key={id} id={id} onFavoriteChange={handleFavoriteChange} />
+              <BoardCard key={id} boardId={id} onFavoriteChange={handleFavoriteChange} />
             ))}
           </div>
         ) : (
           <Empty 
-            description="Немає улюблених дошок" 
+            description="No favorite boards" 
             style={{ marginTop: '40px' }}
           />
         )}
