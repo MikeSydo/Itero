@@ -174,6 +174,23 @@ export default function Task() {
     }
   };
 
+  const handleDownloadAttachment = async (attachment: Attachment) => {
+    try {
+      const response = await fetch(`${api}${attachment.fileUrl}`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = attachment.fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download file:', error);
+    }
+  };
+
   const handleDeleteAttachment = async (attachmentId: number) => {
     try {
       const response = await fetch(`${api}/tasks/attachments/${attachmentId}`, {
@@ -483,7 +500,7 @@ export default function Task() {
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
-                    onClick={() => window.open(`${api}${attachment.fileUrl}`, '_blank')}
+                    onClick={() => handleDownloadAttachment(attachment)}
                     style={{
                       padding: 8,
                       background: 'transparent',

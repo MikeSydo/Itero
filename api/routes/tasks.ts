@@ -88,10 +88,13 @@ router.post('/:id/attachments', upload.single('file'), async (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
 
+    // Декодуємо назву файлу з UTF-8 (multer передає її в latin1)
+    const fileName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+
     const attachment = await prisma.attachment.create({
       data: {
         taskId: id,
-        fileName: req.file.originalname,
+        fileName: fileName,
         fileUrl: `/uploads/${req.file.filename}`,
         fileSize: req.file.size,
         mimeType: req.file.mimetype,
