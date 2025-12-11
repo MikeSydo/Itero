@@ -1,14 +1,14 @@
 import type { kanbanBoard as KanbanBoardType, TasksList as TasksListType, Task } from "types/index";
 import { useFetch, useEditableName } from "../hooks";
-import { TasksList } from "./";
+import { TasksList, TaskCard } from "./";
 import { Flex, Button, Input, Space, MenuProps, Dropdown } from 'antd'
-import { useState, useEffect } from "react";
-import { DndContext, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent, DragOverEvent, closestCorners } from '@dnd-kit/core';
-import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
-import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { DndContext, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent, DragOverEvent, DragStartEvent, closestCenter, UniqueIdentifier, DragOverlay, pointerWithin, rectIntersection, getFirstCollision } from '@dnd-kit/core';
+import { arrayMove, horizontalListSortingStrategy, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useModel, useNavigate, useIntl } from "@umijs/max";
 import { ProLayout } from '@ant-design/pro-layout';
 import { DeleteOutlined, StarOutlined, StarFilled } from "@ant-design/icons";
+import { createPortal } from 'react-dom';
 
 export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (id: number) => void }) {
   const { data:board, loading:loadingBoard, error:errorBoard } = useFetch<KanbanBoardType>(`/boards/${id}`);
@@ -19,6 +19,9 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
   const [displayLists, setDisplayLists] = useState<TasksListType[]>([]);
   const [allTasks, setAllTasks] = useState<Record<number, Task[]>>({});
   const [isFavorite, setIsFavorite] = useState(false);
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+  const lastOverId = useRef<UniqueIdentifier | null>(null);
+  const recentlyMovedToNewContainer = useRef(false);
   const { initialState } = useModel('@@initialState');
 
   const loading = loadingBoard || loadingLists;
@@ -116,7 +119,7 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
     }
   };
 
-  const findTaskList = (taskId: number): number | null => {
+  const findTaskList = (taskId: UniqueIdentifier): number | null => {
     for (const [listId, tasks] of Object.entries(allTasks)) {
       if (tasks.some(task => task.id === taskId)) {
         return parseInt(listId);
@@ -125,167 +128,171 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
     return null;
   }
 
+  // Check if the id belongs to a list
+  const isListId = (id: UniqueIdentifier): boolean => {
+    return displayLists.some(list => list.id === id);
+  };
+
+  // Get active item (list or task)
+  const activeList = activeId && isListId(activeId) 
+    ? displayLists.find(list => list.id === activeId) 
+    : null;
+  
+  const activeTask = activeId && !isListId(activeId)
+    ? Object.values(allTasks).flat().find(task => task.id === activeId)
+    : null;
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setActiveId(active.id);
+  };
+
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
+    
     if (!over) return;
-
-    const activeId = active.id as number;
-    const overId = over.id as number;
-
-    const activeListIndex = displayLists.findIndex(list => list.id === activeId);
-    let overListIndex = displayLists.findIndex(list => list.id === overId);
-
-    if (activeListIndex !== -1) {
-      if (overListIndex === -1) {
-        const taskListId = findTaskList(overId);
-        if (taskListId) {
-          overListIndex = displayLists.findIndex(list => list.id === taskListId);
-        }
-      }
-      
-      if (overListIndex !== -1 && activeListIndex !== overListIndex) {
-        setDisplayLists(arrayMove(displayLists, activeListIndex, overListIndex));
-      }
-      return;
+    
+    const activeIdNum = active.id as number;
+    const overIdNum = over.id as number;
+    
+    // If dragging a list
+    if (isListId(activeIdNum)) {
+      return; // List reordering is handled in onDragEnd
     }
-
-    const activeListId = findTaskList(activeId);
-    let overListId = findTaskList(overId);
-
-    if (displayLists.some(list => list.id === overId)) {
-      overListId = overId;
+    
+    // Dragging a task
+    const activeListId = findTaskList(activeIdNum);
+    let overListId: number | null = null;
+    
+    if (isListId(overIdNum)) {
+      overListId = overIdNum;
+    } else {
+      overListId = findTaskList(overIdNum);
     }
-
+    
     if (!activeListId || !overListId) return;
-
-    setAllTasks(prev => {
-      const sourceTasks = prev[activeListId] || [];
-      const destTasks = prev[overListId] || [];
-      
-      const taskIndex = sourceTasks.findIndex(t => t.id === activeId);
-      const task = sourceTasks[taskIndex];
-      
-      if (!task) return prev;
-
-      if (activeListId === overListId) {
-        const overIndex = sourceTasks.findIndex(t => t.id === overId);
-        if (taskIndex === overIndex) return prev;
+    
+    // Same container - let sortable handle it
+    if (activeListId === overListId) {
+      setAllTasks(prev => {
+        const tasks = prev[activeListId] || [];
+        const activeIndex = tasks.findIndex(t => t.id === activeIdNum);
+        const overIndex = tasks.findIndex(t => t.id === overIdNum);
+        
+        if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) {
+          return prev;
+        }
         
         return {
           ...prev,
-          [activeListId]: arrayMove(sourceTasks, taskIndex, overIndex)
+          [activeListId]: arrayMove(tasks, activeIndex, overIndex)
         };
-      }
-
-      const newSourceTasks = sourceTasks.filter(t => t.id !== activeId);
+      });
+      return;
+    }
+    
+    // Moving between containers
+    setAllTasks(prev => {
+      const sourceTasks = [...(prev[activeListId] || [])];
+      const destTasks = [...(prev[overListId] || [])];
       
-      let newDestTasks;
-      if (displayLists.some(list => list.id === overId)) {
-        newDestTasks = [...destTasks, task];
+      const activeIndex = sourceTasks.findIndex(t => t.id === activeIdNum);
+      if (activeIndex === -1) return prev;
+      
+      const [movedTask] = sourceTasks.splice(activeIndex, 1);
+      
+      let newIndex: number;
+      if (isListId(overIdNum)) {
+        // Dropping on list itself - add at end
+        newIndex = destTasks.length;
       } else {
-        const overIndex = destTasks.findIndex(t => t.id === overId);
-        newDestTasks = [...destTasks];
-        newDestTasks.splice(overIndex, 0, task);
+        // Dropping on a task
+        const overIndex = destTasks.findIndex(t => t.id === overIdNum);
+        newIndex = overIndex >= 0 ? overIndex : destTasks.length;
       }
-
+      
+      destTasks.splice(newIndex, 0, movedTask);
+      recentlyMovedToNewContainer.current = true;
+      
       return {
         ...prev,
-        [activeListId]: newSourceTasks,
-        [overListId]: newDestTasks
+        [activeListId]: sourceTasks,
+        [overListId]: destTasks
       };
     });
-  }
+  };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+    
+    setActiveId(null);
+    
     if (!over) return;
-
-    const activeId = active.id as number;
-    const overId = over.id as number;
-
-    const activeListIndex = displayLists.findIndex(list => list.id === activeId);
-    const overListIndex = displayLists.findIndex(list => list.id === overId);
-
-    if (activeListIndex !== -1 && overListIndex !== -1) {
-      const newLists = arrayMove(displayLists, activeListIndex, overListIndex);
-      setDisplayLists(newLists);
+    
+    const activeIdNum = active.id as number;
+    const overIdNum = over.id as number;
+    
+    // If dragging a list
+    if (isListId(activeIdNum)) {
+      const activeIndex = displayLists.findIndex(list => list.id === activeIdNum);
+      let overIndex = displayLists.findIndex(list => list.id === overIdNum);
       
-      try {
-        await Promise.all(
-          newLists.map((list, index) =>
-            fetch(`${api}/lists/${list.id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ position: index }),
-            })
-          )
-        );
-      } catch (err) {
-        console.error('Failed to update list positions:', err);
+      // If dropping on a task, find its parent list
+      if (overIndex === -1) {
+        const taskListId = findTaskList(overIdNum);
+        if (taskListId) {
+          overIndex = displayLists.findIndex(list => list.id === taskListId);
+        }
+      }
+      
+      if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
+        const newLists = arrayMove(displayLists, activeIndex, overIndex);
+        setDisplayLists(newLists);
+        
+        try {
+          await Promise.all(
+            newLists.map((list, index) =>
+              fetch(`${api}/lists/${list.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ position: index }),
+              })
+            )
+          );
+        } catch (err) {
+          console.error('Failed to update list positions:', err);
+        }
       }
       return;
     }
-
-    const activeListId = findTaskList(activeId);
-    let overListId = findTaskList(overId);
-
-    if (displayLists.some(list => list.id === overId)) {
-      overListId = overId;
-    }
-
-    if (!activeListId || !overListId) return;
-
-    const targetTasks = allTasks[overListId] || [];
+    
+    // Dragging a task - persist changes
+    const currentListId = findTaskList(activeIdNum);
+    if (!currentListId) return;
+    
+    const tasksInList = allTasks[currentListId] || [];
     
     try {
       await Promise.all(
-        targetTasks.map((task, index) =>
+        tasksInList.map((task, index) =>
           fetch(`${api}/tasks/${task.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-              listId: overListId,
+              listId: currentListId,
               position: index
             }),
           })
         )
       );
-
-      if (activeListId !== overListId) {
-        const sourceTasks = allTasks[activeListId] || [];
-        await Promise.all(
-          sourceTasks.map((task, index) =>
-            fetch(`${api}/tasks/${task.id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                position: index
-              }),
-            })
-          )
-        );
-        
-        const [sourceTasksResponse, targetTasksResponse] = await Promise.all([
-          fetch(`${api}/lists/${activeListId}/tasks`).then(res => res.json()),
-          fetch(`${api}/lists/${overListId}/tasks`).then(res => res.json())
-        ]);
-        
-        setAllTasks(prev => ({
-          ...prev,
-          [activeListId]: sourceTasksResponse,
-          [overListId]: targetTasksResponse
-        }));
-      } else {
-        const tasksResponse = await fetch(`${api}/lists/${activeListId}/tasks`).then(res => res.json());
-        setAllTasks(prev => ({
-          ...prev,
-          [activeListId]: tasksResponse
-        }));
-      }
     } catch (err) {
-      console.error('Failed to update task:', err);
+      console.error('Failed to update task positions:', err);
     }
-  }
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -464,11 +471,13 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
             {loading && <div style={{ color: isDarkTheme ? '#fff' : '#000' }}>Loading…</div>}
             <DndContext 
               sensors={sensors} 
+              onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               onDragOver={handleDragOver}
-              collisionDetection={closestCorners}
+              onDragCancel={handleDragCancel}
+              collisionDetection={closestCenter}
             >
-              <SortableContext items={displayLists} strategy={horizontalListSortingStrategy}>
+              <SortableContext items={displayLists.map(l => l.id)} strategy={horizontalListSortingStrategy}>
                 {!loading && !error && displayLists && displayLists.map(list => (
                   <TasksList 
                     key={list.id} 
@@ -478,6 +487,56 @@ export default function KanbanBoard({ id, onDelete }: { id: number, onDelete?: (
                   />
                 ))}
               </SortableContext>
+              {createPortal(
+                <DragOverlay>
+                  {activeList ? (
+                    <div style={{ 
+                      background: '#3d3d3d', 
+                      width: 300, 
+                      borderRadius: 8, 
+                      padding: 10,
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                      opacity: 0.9,
+                      rotate: '3deg'
+                    }}>
+                      <div style={{ fontSize: 20, fontWeight: 600, color: 'white', padding: '0 5px' }}>
+                        {activeList.name}
+                      </div>
+                      <div style={{ minHeight: 50, marginTop: 10 }}>
+                        {(allTasks[activeList.id] || []).slice(0, 3).map(task => (
+                          <div key={task.id} style={{ 
+                            background: '#2d2d2d', 
+                            padding: 10, 
+                            borderRadius: 6, 
+                            marginBottom: 5,
+                            color: 'white'
+                          }}>
+                            {task.name}
+                          </div>
+                        ))}
+                        {(allTasks[activeList.id] || []).length > 3 && (
+                          <div style={{ color: '#888', fontSize: 12, padding: 5 }}>
+                            +{(allTasks[activeList.id] || []).length - 3} more tasks
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : activeTask ? (
+                    <div style={{ 
+                      background: '#2d2d2d', 
+                      padding: 10, 
+                      borderRadius: 6,
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                      color: 'white',
+                      width: 280,
+                      opacity: 0.9
+                    }}>
+                      {activeTask.name}
+                    </div>
+                  ) : null}
+                </DragOverlay>,
+                document.body
+              )}
             </DndContext>
             {isCreating ? (
                     <div style={{ marginLeft: 20, marginBottom: 5, width: 300, minWidth: 300, flexShrink: 0 }}>

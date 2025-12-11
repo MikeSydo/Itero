@@ -15,7 +15,13 @@ interface TaskCardProps {
 export default function TaskCard({ task, onDelete }: TaskCardProps) {
   const { id, isCompleted } = task; 
   const [isDeleted, setIsDeleted] = useState(false);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
+    id,
+    data: {
+      type: 'task',
+      task,
+    },
+  });
   const { boardId } = useParams<{ boardId: string }>();
   
   const api = `http://localhost:${process.env.PORT || 3000}`;

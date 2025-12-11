@@ -7,7 +7,6 @@ import { useFetch, useEditableName } from '../hooks';
 import { DeleteOutlined } from '@ant-design/icons'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
-import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { CSS } from '@dnd-kit/utilities';
 
 interface TasksListProps {
@@ -26,8 +25,18 @@ export default function TasksList({ list, tasks, setTasks }: TasksListProps) {
   
   const { attributes, listeners, setNodeRef: setSortableRef, transform, transition, isDragging } = useSortable({ 
     id: list.id,
+    data: {
+      type: 'list',
+      list,
+    },
   });
-  const { setNodeRef: setDroppableRef } = useDroppable({ id: list.id });
+  const { setNodeRef: setDroppableRef } = useDroppable({ 
+    id: list.id,
+    data: {
+      type: 'list',
+      list,
+    },
+  });
 
   const loading = loadingList || loadingTasks;
   const error = errorList || errorTasks;
@@ -178,9 +187,7 @@ export default function TasksList({ list, tasks, setTasks }: TasksListProps) {
     minWidth: 300,
     flexShrink: 0,
     borderRadius: 8,
-    opacity: isDragging ? 0.6 : 1,
-    rotate: isDragging ? '3deg' : '0deg',
-    boxShadow: isDragging ? '0 10px 30px rgba(0,0,0,0.5)' : 'none',
+    opacity: isDragging ? 0.4 : 1,
   };
 
   const dragHandleStyle = {
